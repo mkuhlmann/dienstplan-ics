@@ -1,0 +1,25 @@
+{
+	"exclude": [
+		"dist"
+	],
+	"compilerOptions": {
+		"target": "ES2022",
+		"outDir": "dist",
+		"module": "commonjs",
+		"lib": [
+			"ESNext"
+		],
+		"baseUrl": "src",
+		"paths": {
+			"@/*": [
+				"*"
+			]
+		},
+		"strict": true,
+		"strictPropertyInitialization": false,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"moduleResolution": "node"
+	}
+}

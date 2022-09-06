@@ -1,0 +1,39 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = "file:./database.db"
+}
+
+model Person {
+    id         String       @id @default(cuid())
+    firstName  String
+    lastName   String       @unique
+    Dienstplan Dienstplan[]
+}
+
+model Dienstplan {
+    id       String @id @default(cuid())
+    person   Person @relation(fields: [personId], references: [id])
+    personId String
+
+    dienst   Dienst @relation(fields: [dienstId], references: [id])
+    dienstId String
+
+    startsAt DateTime
+    endsAt   DateTime
+}
+
+model Dienst {
+    id        String @id @default(cuid())
+    shortName String
+    name      String
+
+    startsAt DateTime
+    endsAt   DateTime
+
+    active     Boolean
+    Dienstplan Dienstplan[]
+}
