@@ -5,6 +5,7 @@ import { pipeline } from 'stream';
 import { ingest } from '../ingest';
 import util from 'util';
 import { dirname } from '../util';
+import { MultipartValue } from '@fastify/multipart';
 
 const pump = util.promisify(pipeline);
 
@@ -24,6 +25,10 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 
 	fastify.post('/ingest', async (request, reply) => {
 		const file = await request.file();
+
+		if(!file.fields.password || (file.fields.password as any as MultipartValue<string>).value !== process.env.INGEST_PASSWORD) {
+			return reply.code(401).send('Invalid password');
+		}
 
 		if (!file) {
 			return reply.code(400).send('No file uploaded');

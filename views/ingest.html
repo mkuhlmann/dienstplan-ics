@@ -7,9 +7,10 @@
 	<meta name='viewport' content='width=device-width, initial-scale=1'>
 </head>
 <body>
-	
+	<h1>Ingest</h1>
 	<form method="post" action="/ingest" enctype="multipart/form-data">
-		<input type="file" name="file" />
+		<label for="password">Password: </label><input type="password" name="password" /><br><br>
+		<input type="file" name="file" /><br><br>
 		<input type="submit" value="Upload" />
 	</form>
 </body>

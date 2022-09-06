@@ -27,16 +27,3 @@ jobs:
         with:
           push: true
           tags: mkuhlmann/dienstplan-ics:latest
-
-  # deploy-staging:
-  #   needs:
-  #     - docker
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Deploy to Caprover Using GitHub Actions
-  #       uses: floms/action-caprover@v1
-  #       with:
-  #         host: ${{ secrets.CAPROVER_URL }}
-  #         password: ${{ secrets.CAPROVER_PASSWORD }}
-  #         app: ${{ secrets.CAPROVER_APP }}
-  #         image: mkuhlmann/heparin-app:latest
