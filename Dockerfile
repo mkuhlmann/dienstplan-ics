@@ -1,7 +1,9 @@
 FROM node:alpine as build-stage
 WORKDIR /app
+COPY package*.json /app
+RUN npm install
 COPY . /app
-RUN npm install && npx prisma generate && npm run build
+RUN npx prisma generate && npm run build
 
 FROM node:alpine as run-stage
 WORKDIR /app

@@ -95,20 +95,23 @@ export const ingest = async (fileName: string) => {
 
 	let date: dayjs.Dayjs;
 
-	let match = fileName.match(/(\d{4})-(\d{2})\.xlsx/);
+	let match = fileName.match(/\/(\d{4})-(\d{2})\.xlsx$/);
 
 	if (match) {
-		date = dayjs(new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1));
-	}
-
-	match = fileName.match(/(\d{2})\.xlsx/);
-	if (match) {
-		date = dayjs(new Date(dayjs().year(), parseInt(match[1]) - 1, 1)).startOf('month');
+		date = dayjs(new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1, 12, 0, 0)).tz('Europe/Berlin');
 	} else {
-		throw new Error('Could not parse date from filename');
+		match = fileName.match(/^\/(\d{2})\.xlsx$/);
+		if (match) {
+			date = dayjs(new Date(dayjs().year(), parseInt(match[1]) - 1, 1, 12, 0, 0)).startOf('month').tz('Europe/Berlin');
+		} else {
+			throw new Error('Could not parse date from filename');
+		}
 	}
+
+	
 
 	log(`📅 Assumed Date: ${date.format('MMMM YYYY')}`);
+
 
 	const workbook = XLSX.readFile(fileName);
 
@@ -209,12 +212,13 @@ const insertDatabase = async (persons: Record<string, Person>, date: dayjs.Dayjs
 			}
 
 
-			let startsAt = date.add(day.day - 1, 'day').add(dienst.startsDayjs.get('hour'), 'hour').add(dienst.startsDayjs.get('minute'), 'minute');
-			let endsAt = date.add(day.day - 1, 'day').add(dienst.endsDayjs.get('hour'), 'hour').add(dienst.endsDayjs.get('minute'), 'minute');
+			let startsAt = date.set('date', day.day).startOf('day').add(dienst.startsDayjs.get('hour'), 'hour').add(dienst.startsDayjs.get('minute'), 'minute');
+			let endsAt = date.set('date', day.day).startOf('day').add(dienst.endsDayjs.get('hour'), 'hour').add(dienst.endsDayjs.get('minute'), 'minute');
 
 			if (startsAt.isAfter(endsAt)) {
 				endsAt = endsAt.add(1, 'day');
 			}
+
 
 			i++;
 			await prisma.dienstplan.create({

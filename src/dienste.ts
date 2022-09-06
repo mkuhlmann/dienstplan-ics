@@ -11,8 +11,8 @@ export const getDiensteMap = async (byId = false) => {
 		const id = byId ? dienst.id : dienst.shortName;
 		diensteObj[id] = {
 			...dienst,
-			startsDayjs: dayjs(dienst.startsAt.toISOString().substring(0, 23)),
-			endsDayjs: dayjs(dienst.endsAt.toISOString().substring(0, 23))
+			startsDayjs: dayjs.tz(dienst.startsAt),
+			endsDayjs: dayjs.tz(dienst.endsAt)
 		};
 
 	}

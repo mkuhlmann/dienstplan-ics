@@ -88,9 +88,9 @@ END:VTIMEZONE`;
 		ics += `
 BEGIN:VEVENT
 UID:${md5(person.id + dienst.startsAt.toString())}
-DTSTAMP:${dayjs().tz('UTC').format('YYYYMMDDTHHmmss')}Z
-DTSTART:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDDTHHmmss')}Z
-DTEND:${dayjs(dienst.endsAt).tz('UTC').format('YYYYMMDDTHHmmss')}Z
+DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss[Z]')}
+DTSTART:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDDTHHmmss[Z]')}
+DTEND:${dayjs(dienst.endsAt).format('YYYYMMDDTHHmmss[Z]')}
 SUMMARY:${dienste[dienst.dienstId].name}
 END:VEVENT`
 
