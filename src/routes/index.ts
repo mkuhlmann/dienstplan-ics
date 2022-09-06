@@ -1,5 +1,6 @@
+import { dirname } from '../util';
 import { FastifyPluginAsync } from 'fastify';
-import { ingest } from '../ingest';
+import fs from 'fs';
 
 
 const plugin: FastifyPluginAsync = async (fastify, opts) => {

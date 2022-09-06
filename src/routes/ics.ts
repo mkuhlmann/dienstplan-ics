@@ -32,8 +32,8 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 
 
 
-		reply.header('Content-Type', 'text/calendar');
-		reply.header('Content-Disposition', `inline; filename="${person.lastName}.ics"`);
+		reply.header('Content-Type', 'text/calendar; charset=utf-8');
+		reply.header('Content-Disposition', `attachment; filename="${person.lastName}.ics"`);
 
 		return await getIcs(person);
 
@@ -64,7 +64,9 @@ const getIcs = async (person: Person) => {
 
 	let ics = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//mkuhlmann/v1.0//EN
+PRODID:-//mkuhlmann/NONSGML Event Calendar//EN
+NAME:MHE Dienstplan
+DESCRIPTION:MHE Dienstplan für ${person.lastName}
 BEGIN:VTIMEZONE
 TZID:Europe/Berlin
 BEGIN:DAYLIGHT
