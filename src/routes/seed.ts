@@ -32,7 +32,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			{
 				shortName: 'ZNA2',
 				name: 'ZNA 2',
-				startsAt: new Date('2021-01-01T08:00:00.000Z'),
+				startsAt: new Date('2021-01-01T10:30:00.000Z'),
 				endsAt: new Date('2021-01-01T20:30:00.000Z'),
 				active: true
 			},
