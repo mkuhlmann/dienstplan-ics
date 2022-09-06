@@ -15,8 +15,6 @@ dotenv.config();
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-dayjs.tz.setDefault('Europe/Berlin');
-
 
 const app = fastify({
 });
