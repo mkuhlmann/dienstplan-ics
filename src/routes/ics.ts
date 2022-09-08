@@ -6,12 +6,12 @@ import dayjs from 'dayjs';
 import { Person } from '.prisma/client';
 import path from 'path';
 import fs from 'fs';
-import { dirname } from '../util';
+import { dirname, hmac } from '../util';
 
 
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
 
-	fastify.get<{ Querystring: { name: string } }>('/ics', async (request, reply) => {
+	fastify.get<{ Querystring: { name: string, hmac: string } }>('/ics', async (request, reply) => {
 		if (!request.query.name || request.query.name.length < 3) {
 			reply.code(400);
 			return 'Invalid name';
@@ -30,14 +30,15 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			return 'Person not found';
 		}
 
-
+		if (request.query.hmac !== hmac(person.id)) {
+			reply.status(403);
+			return 'Invalid HMAC';
+		}
 
 		reply.header('Content-Type', 'text/calendar; charset=utf-8');
 		reply.header('Content-Disposition', `attachment; filename="${person.lastName}.ics"`);
 
 		return await getIcs(person);
-
-
 	});
 
 
@@ -70,6 +71,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		const dienste = await getDiensteMap(true);
 
 		return {
+			hmac: hmac(person.id),
 			person: person,
 			dienstplan: dienstplan.map(dienst => ({
 				...dienst,

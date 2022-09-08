@@ -14,7 +14,7 @@
 
 <body>
 	<div id="app" class="m-5">
-		<h1 class="font-bold text-3xl mb-5">MHE Dienstplan</h1>
+		<h1 class="font-bold text-3xl mb-5">Dienstplan</h1>
 
 		<div class="italic" v-bind:style="{ display: 'none' }">Lade ...</div>
 
@@ -51,7 +51,7 @@
 					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
 					<input name="ics" type="text"
 					class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-					:value="`https://dienstplan.app.mkuhlmann.org/ics?name=${escape(person.lastName)}`" v-on:click="copyInput" />
+					:value="`https://dienstplan.app.mkuhlmann.org/ics?name=${encodeURIComponent(person.lastName)}&hmac=${hmac}`" v-on:click="copyInput" />
 					<div v-if="showCopied" class="font-bold text-green-500">ℹ️ URL in die Zwischenablage kopiert.</div>
 				</div>
 
@@ -81,11 +81,7 @@
 					</div>
 				</div>
 			</div>
-
 		</div>
-
-		
-
 	</div>
 
 
@@ -106,6 +102,7 @@
 					}
 				});
 
+				const hmac = ref('');
 				const person = ref({});
 				const dienstplan = ref({});
 				const showAnleitung = ref(0);
@@ -135,6 +132,7 @@
 							if(!_data.error) {
 								status.value = 1;
 								person.value = _data.person;
+								hmac.value = _data.hmac;
 								dienstplan.value = dienstplanToKW(_data.dienstplan);
 							} else {
 								status.value = 2;
@@ -156,7 +154,7 @@
 					return dienstplanKW;
 				};
 
-				return {name, dienstplan, person, status, showAnleitung, toggleAnleitung, showCopied, copyInput, query, escape};
+				return {name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, copyInput, query, encodeURIComponent};
 			}
 		});
 
