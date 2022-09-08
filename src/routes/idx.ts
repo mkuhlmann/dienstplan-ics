@@ -16,8 +16,8 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		
 		let file = fs.readFileSync(dirname(`views/preview.html`), 'utf-8');
 
-		file = file
-			.replace('%BASEURL%', `${request.protocol}://${request.hostname}`);
+		// file = file
+		// 	.replace('%BASEURL%', `${request.protocol}://${request.hostname}`);
 
 
 		return reply.type('text/html; charset=utf-8').send(file);
