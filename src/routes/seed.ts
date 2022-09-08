@@ -68,14 +68,14 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 				shortName: 'NEF1',
 				name: 'NEF 1',
 				startsAt: new Date('2021-01-01T08:00:00.000Z'),
-				endsAt: new Date('2021-01-01T20:30:00.000Z'),
+				endsAt: new Date('2021-01-02T08:00:00.000Z'),
 				active: true
 			},
 			{
 				shortName: 'NEF2',
-				name: 'NEF 2',
+				name: 'NEF 2',				
 				startsAt: new Date('2021-01-01T08:00:00.000Z'),
-				endsAt: new Date('2021-01-02T08:00:00.000Z'),
+				endsAt: new Date('2021-01-01T20:30:00.000Z'),
 				active: true
 			}
 		];

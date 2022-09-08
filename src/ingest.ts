@@ -193,6 +193,7 @@ const insertDatabase = async (persons: Record<string, Person>, date: dayjs.Dayjs
 		for (const day of person.days) {
 			let dienstName = day.schedule;
 
+			// freie Tage
 			if (['EZ', 'BV', 'Frei', 'FW', 'Url', 'FB', 'Feiertag'].includes(day.schedule)) {
 				continue;
 			}
@@ -215,7 +216,7 @@ const insertDatabase = async (persons: Record<string, Person>, date: dayjs.Dayjs
 			let startsAt = date.set('date', day.day).startOf('day').add(dienst.startsDayjs.get('hour'), 'hour').add(dienst.startsDayjs.get('minute'), 'minute');
 			let endsAt = date.set('date', day.day).startOf('day').add(dienst.endsDayjs.get('hour'), 'hour').add(dienst.endsDayjs.get('minute'), 'minute');
 
-			if (startsAt.isAfter(endsAt)) {
+			if (startsAt.isAfter(endsAt) || startsAt.isSame(endsAt)) {
 				endsAt = endsAt.add(1, 'day');
 			}
 
