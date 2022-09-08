@@ -72,9 +72,9 @@
 				<hr class="mb-5" />
 		
 				<div>
-					<div v-for="(items, kw) in dienstplan">
-						<h4 class="italic mb-2">KW {{ kw }}</h4>
-						<div class="border px-4 py-2 inline-block mb-3 mr-3" v-for="d in items">
+					<div v-for="(kw, kwNum) in dienstplan">
+						<h4 class="italic mb-2">KW {{ kwNum }} ({{ formatMin(kw.sum) }})</h4>
+						<div class="border px-4 py-2 inline-block mb-3 mr-3" v-for="d in kw.dienste">
 							<div>
 								<span class="">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</span>
 								<span class="font-bold float-right ml-10">{{ d.dienst.shortName }}</span>
@@ -157,20 +157,35 @@
 				};
 
 				const dienstplanToKW = (dienstplan) => {
-					const dienstplanKW = {};
+					const dienstplanKW = { };
 
 					dienstplan.forEach(d => {
-						const kw = dayjs(d.startsAt).week();
+						const date = dayjs(d.startsAt);
+						const kw = date.week();
+
 						if(!dienstplanKW[kw]) {
-							dienstplanKW[kw] = [];
+							dienstplanKW[kw] = {
+								sum: 0,
+								dienste: []
+							};
 						}
-						dienstplanKW[kw].push(d);
+						dienstplanKW[kw].sum += Math.round((new Date(d.endsAt).getTime() - new Date(d.startsAt).getTime()) / 1000 / 60);
+
+						dienstplanKW[kw].dienste.push(d);
 					});
 
+					console.log(dienstplanKW);
 					return dienstplanKW;
 				};
 
-				return {baseUrl, name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, copyInput, query, encodeURIComponent};
+				const formatMin = (min) => {
+					const h = Math.floor(min / 60);
+					const m = min % 60;
+
+					return `${h}h ${m}min`;
+				};
+
+				return {baseUrl, name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, formatMin, copyInput, query, encodeURIComponent};
 			}
 		});
 
