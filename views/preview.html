@@ -63,9 +63,9 @@
 					</div>
 					<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für  Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
 					<div v-if="showAnleitung == 2">
-						<img src="https://top-secret.xyz/UkPqKFi/thunderbird_quh2XkADNk.png" class="inline-block" />
-						<img src="https://top-secret.xyz/rd37Ceh/thunderbird_imt0T2OH1k.png" class="inline-block" />
-						<img src="https://top-secret.xyz/gWOiENE/thunderbird_QB3Az8akab.png" class="inline-block" />
+						<img src="https://s.mkuhlmann.org/UkPqKFi/thunderbird_quh2XkADNk.png" class="inline-block" />
+						<img src="https://s.mkuhlmann.org/rd37Ceh/thunderbird_imt0T2OH1k.png" class="inline-block" />
+						<img src="https://s.mkuhlmann.org/gWOiENE/thunderbird_QB3Az8akab.png" class="inline-block" />
 					</div>
 				</div>
 
@@ -111,7 +111,7 @@
 				const showAnleitung = ref(0);
 
 				const toggleAnleitung = (val) => {
-					showAnleitung.value = (showAnleitung.value > 0) ? 0 : val;
+					showAnleitung.value = (showAnleitung.value == val) ? 0 : val;
 				};
 
 				const showCopied = ref(false);
