@@ -40,6 +40,45 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 
 	});
 
+
+	fastify.get<{ Querystring: { name: string } }>('/json', async (request, reply) => {
+
+		if (!request.query.name || request.query.name.length < 3) {
+			reply.code(400);
+			return { error: 'Invalid name' };
+		}
+
+		const person = await prisma.person.findFirst({
+			where: {
+				lastName: {
+					contains: request.query.name
+				}
+			}
+		});
+
+		if (!person) {
+			reply.status(404);
+			return { error: 'Person not found' };
+		}
+
+		const dienstplan = await prisma.dienstplan.findMany({
+			where: {
+				personId: person.id
+			}
+		});
+
+		const dienste = await getDiensteMap(true);
+
+		return {
+			person: person,
+			dienstplan: dienstplan.map(dienst => ({
+				...dienst,
+				dienst: dienste[dienst.dienstId]
+			}))
+		};
+
+	});
+
 };
 
 

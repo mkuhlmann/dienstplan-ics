@@ -17,14 +17,14 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		const dienste: Prisma.XOR<Prisma.DienstCreateInput, Prisma.DienstUncheckedCreateInput>[] = [
 			{
 				shortName: 'TD',
-				name: 'Tagesdienst',
+				name: 'Tagdienst',
 				startsAt: new Date('2021-01-01T08:00:00.000Z'),
 				endsAt: new Date('2021-01-01T16:30:00.000Z'),
 				active: true
 			},
 			{				
 				shortName: 'TD+SD',
-				name: 'Tagesdienst + Spätdienst',
+				name: 'Tagdienst + Spätdienst',
 				startsAt: new Date('2021-01-01T08:00:00.000Z'),
 				endsAt: new Date('2021-01-01T20:30:00.000Z'),
 				active: true

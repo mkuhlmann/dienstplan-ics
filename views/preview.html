@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dienstplan</title>
+	<script src="https://cdn.tailwindcss.com/3.1.8"></script>
+	<script src="https://unpkg.com/dayjs@1.11.5/dayjs.min.js"></script>
+	<script src="https://unpkg.com/dayjs@1.11.5/locale/de.js"></script>
+</head>
+
+<body>
+	<div id="app" class="m-5">
+		<h1 class="font-bold text-3xl mb-5">MHE Dienstplan</h1>
+
+		<div class="italic" v-bind:style="{ display: 'none' }">Lade ...</div>
+
+
+		<div class="hidden" v-bind:style="{ display: 'block' }">
+
+			<form v-on:submit.prevent="query()">
+				<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Mind. vier Zeichen des Nachnamens eingeben:</label>
+				<div  class="flex gap-5" >
+
+					<input type="text"
+						class="flex-1 g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+						v-model="name" placeholder="Nachname ..." />
+					<button class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Dienstplan abrufen</button>
+				</div>
+			</form>
+
+			<div v-if="status == 2" class="bg-red-400 border-l-5 border-l-red-600 text-white p-5 my-5">
+				Kein Dienstplan für {{ name }} gefunden.
+			</div>
+
+			<div v-if="status == 1">
+				<h2 class="text-2xl my-5">Dienstplan für {{ person.lastName }}, {{ person.firstName }}</h2>
+
+				<div class="mb-5">
+					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
+					<input name="ics" type="text"
+					class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+					:value="`https://dienstplan.app.mkuhlmann.org/ics?name=${escape(person.lastName)}`" />
+				</div>
+
+				<div class="mb-5">
+					<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(1)">Anleitung für Google Calendar {{ showAnleitung == 1 ? '👇' : '👈' }}</div>
+					<div v-if="showAnleitung == 1">
+						<img src="https://s.mkuhlmann.org/y4nU5aS/firefox_9pRM9LSXto.png" class="inline-block" />
+						<img src="https://s.mkuhlmann.org/NJSa0rE/firefox_eTEe4Jdd45.png" class="inline-block" />
+					</div>
+					<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für  Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
+					<div v-if="showAnleitung == 2">
+						<img src="https://top-secret.xyz/UkPqKFi/thunderbird_quh2XkADNk.png" class="inline-block" />
+						<img src="https://top-secret.xyz/rd37Ceh/thunderbird_imt0T2OH1k.png" class="inline-block" />
+						<img src="https://top-secret.xyz/gWOiENE/thunderbird_QB3Az8akab.png" class="inline-block" />
+					</div>
+				</div>
+
+
+				
+
+				<hr class="mb-5" />
+
+			
+				<div>
+					<div v-for="d in dienstplan" class="border px-4 py-2 inline-block mb-3 mr-3">
+						<div class="font-bold">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</div>
+						<div class="flex">
+							<div class="mr-3">{{ d.dienst.name }}</div>
+							<div>{{  dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		
+
+	</div>
+
+
+	<script type="module">
+		import { createApp, ref } from 'https://unpkg.com/vue@3.2.39/dist/vue.esm-browser.js';
+
+		dayjs.locale('de');
+
+		const app = createApp({
+			setup() {
+				const name = ref('');
+				const status = ref(0);
+				const showAnleitung = ref(0);
+
+				const person = ref({});
+				const dienstplan = ref([]);
+
+				const toggleAnleitung = (val) => {
+					showAnleitung.value = (showAnleitung.value > 0) ? 0 : val;
+				}
+
+				const query = () => {
+					fetch(`/json?name=${name.value}`)
+						.then(response => response.json())
+						.then(_data => {
+							if(!_data.error) {
+								status.value = 1;
+								person.value = _data.person;
+								dienstplan.value = _data.dienstplan;
+							} else {
+								status.value = 2;
+							}
+						});
+				};
+
+				return {name, dienstplan, person, status, showAnleitung, toggleAnleitung, query, escape};
+			}
+		});
+
+		app.config.globalProperties.dayjs = dayjs;
+
+		app.mount('#app');
+	</script>
+</body>
+
+</html>
