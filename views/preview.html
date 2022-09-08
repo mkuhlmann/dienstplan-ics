@@ -21,7 +21,7 @@
 		<div class="hidden" v-bind:style="{ display: 'block' }">
 
 			<form v-on:submit.prevent="query()">
-				<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Mind. vier Zeichen des Nachnamens eingeben:</label>
+				<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Mindestens vier Zeichen des Nachnamens eingeben:</label>
 				<div  class="flex gap-5" >
 
 					<input type="text"
@@ -42,7 +42,8 @@
 					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
 					<input name="ics" type="text"
 					class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-					:value="`https://dienstplan.app.mkuhlmann.org/ics?name=${escape(person.lastName)}`" />
+					:value="`https://dienstplan.app.mkuhlmann.org/ics?name=${escape(person.lastName)}`" v-on:click="copyInput" />
+					<div v-if="showCopied" class="font-bold text-green-500">ℹ️ URL in die Zwischenablage kopiert.</div>
 				</div>
 
 				<div class="mb-5">
@@ -92,14 +93,29 @@
 			setup() {
 				const name = ref('');
 				const status = ref(0);
-				const showAnleitung = ref(0);
 
 				const person = ref({});
 				const dienstplan = ref([]);
 
+
+				const showAnleitung = ref(0);
+
 				const toggleAnleitung = (val) => {
 					showAnleitung.value = (showAnleitung.value > 0) ? 0 : val;
-				}
+				};
+
+				const showCopied = ref(false);
+
+				const copyInput = (e) => {
+					e.target.select();
+					e.target.setSelectionRange(0, 99999);
+					document.execCommand('copy');
+
+					showCopied.value = true;
+					setTimeout(() => {
+						showCopied.value = false;
+					}, 5000);
+				};
 
 				const query = () => {
 					fetch(`/json?name=${name.value}`)
@@ -115,7 +131,7 @@
 						});
 				};
 
-				return {name, dienstplan, person, status, showAnleitung, toggleAnleitung, query, escape};
+				return {name, dienstplan, person, status, showAnleitung, toggleAnleitung, showCopied, copyInput, query, escape};
 			}
 		});
 
