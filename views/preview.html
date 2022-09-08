@@ -9,6 +9,7 @@
 	<script src="https://cdn.tailwindcss.com/3.1.8"></script>
 	<script src="https://unpkg.com/dayjs@1.11.5/dayjs.min.js"></script>
 	<script src="https://unpkg.com/dayjs@1.11.5/locale/de.js"></script>
+	<script src="https://unpkg.com/dayjs@1.11.5/plugin/weekOfYear.js"></script>
 </head>
 
 <body>
@@ -60,18 +61,14 @@
 					</div>
 				</div>
 
-
-				
-
 				<hr class="mb-5" />
-
-			
+		
 				<div>
-					<div v-for="d in dienstplan" class="border px-4 py-2 inline-block mb-3 mr-3">
-						<div class="font-bold">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</div>
-						<div class="flex">
-							<div class="mr-3">{{ d.dienst.name }}</div>
-							<div>{{  dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</div>
+					<div v-for="(items, kw) in dienstplan">
+						<h4 class="italic mb-2">KW {{ kw }}</h4>
+						<div class="border px-4 py-2 inline-block mb-3 mr-3" v-for="d in items">
+							<div class="font-bold">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</div>
+							<div>{{ d.dienst.name }} <span class="italic">{{  dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span></div>
 						</div>
 					</div>
 				</div>
@@ -88,6 +85,7 @@
 		import { createApp, ref } from 'https://unpkg.com/vue@3.2.39/dist/vue.esm-browser.js';
 
 		dayjs.locale('de');
+		dayjs.extend(dayjs_plugin_weekOfYear);
 
 		const app = createApp({
 			setup() {
@@ -95,7 +93,7 @@
 				const status = ref(0);
 
 				const person = ref({});
-				const dienstplan = ref([]);
+				const dienstplan = ref({});
 
 
 				const showAnleitung = ref(0);
@@ -124,11 +122,25 @@
 							if(!_data.error) {
 								status.value = 1;
 								person.value = _data.person;
-								dienstplan.value = _data.dienstplan;
+								dienstplan.value = dienstplanToKW(_data.dienstplan);
 							} else {
 								status.value = 2;
 							}
 						});
+				};
+
+				const dienstplanToKW = (dienstplan) => {
+					const dienstplanKW = {};
+
+					dienstplan.forEach(d => {
+						const kw = dayjs(d.startsAt).week();
+						if(!dienstplanKW[kw]) {
+							dienstplanKW[kw] = [];
+						}
+						dienstplanKW[kw].push(d);
+					});
+
+					return dienstplanKW;
 				};
 
 				return {name, dienstplan, person, status, showAnleitung, toggleAnleitung, showCopied, copyInput, query, escape};

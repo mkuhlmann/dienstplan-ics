@@ -193,7 +193,7 @@ const insertDatabase = async (persons: Record<string, Person>, date: dayjs.Dayjs
 		for (const day of person.days) {
 			let dienstName = day.schedule;
 
-			if (['EZ', 'BV', 'Frei', 'FW', 'Url', 'FB'].includes(day.schedule)) {
+			if (['EZ', 'BV', 'Frei', 'FW', 'Url', 'FB', 'Feiertag'].includes(day.schedule)) {
 				continue;
 			}
 
