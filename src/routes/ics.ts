@@ -143,7 +143,7 @@ UID:${md5(person.id + dienst.startsAt.toString())}
 DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss[Z]')}
 DTSTART:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDDTHHmmss[Z]')}
 DTEND:${dayjs(dienst.endsAt).format('YYYYMMDDTHHmmss[Z]')}
-SUMMARY:${dienste[dienst.dienstId].name}
+SUMMARY:${dienste[dienst.dienstId].name}${dienst.position ? ` (${dienst.position})` : ''}
 END:VEVENT`
 
 	}

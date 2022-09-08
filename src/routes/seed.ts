@@ -38,7 +38,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			},
 			{
 				shortName: 'ZNATW',
-				name: 'ZNA Tagdienst Wochenede',
+				name: 'ZNA Tagdienst Wochenende',
 				startsAt: new Date('2021-01-01T08:00:00.000Z'),
 				endsAt: new Date('2021-01-01T20:30:00.000Z'),
 				active: true

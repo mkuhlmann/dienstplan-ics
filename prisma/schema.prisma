@@ -15,7 +15,10 @@ model Person {
 }
 
 model Dienstplan {
-    id       String @id @default(cuid())
+    id String @id @default(cuid())
+
+    position String?
+
     person   Person @relation(fields: [personId], references: [id])
     personId String
 

@@ -51,7 +51,7 @@
 					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
 					<input name="ics" type="text"
 					class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-					:value="`https://dienstplan.app.mkuhlmann.org/ics?name=${encodeURIComponent(person.lastName)}&id=${person.id}&hmac=${hmac}`" v-on:click="copyInput" />
+					:value="`${baseUrl}/ics?name=${encodeURIComponent(person.lastName)}&id=${person.id}&hmac=${hmac}`" v-on:click="copyInput" />
 					<div v-if="showCopied" class="font-bold text-green-500">ℹ️ URL in die Zwischenablage kopiert.</div>
 				</div>
 
@@ -75,8 +75,14 @@
 					<div v-for="(items, kw) in dienstplan">
 						<h4 class="italic mb-2">KW {{ kw }}</h4>
 						<div class="border px-4 py-2 inline-block mb-3 mr-3" v-for="d in items">
-							<div class="font-bold">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</div>
-							<div>{{ d.dienst.name }} <span class="italic">{{  dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span></div>
+							<div>
+								<span class="">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</span>
+								<span class="font-bold float-right ml-10">{{ d.dienst.shortName }}</span>
+							</div>
+							<div>
+								<span class="italic">{{  dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span>
+								<span class="float-right ml-10" v-if="d.position">({{ d.position }})</span>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -87,6 +93,8 @@
 
 	<script type="module">
 		import { createApp, ref, watch } from 'https://unpkg.com/vue@3.2.39/dist/vue.esm-browser.js';
+
+		const baseUrl = '%BASEURL%';
 
 		dayjs.locale('de');
 		dayjs.extend(dayjs_plugin_weekOfYear);
@@ -162,7 +170,7 @@
 					return dienstplanKW;
 				};
 
-				return {name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, copyInput, query, encodeURIComponent};
+				return {baseUrl, name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, copyInput, query, encodeURIComponent};
 			}
 		});
 

@@ -8,10 +8,12 @@ import path from 'path';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
 
 dotenv.config();
 
 
+dayjs.extend(weekOfYear);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 // always use UTC, ffs
@@ -36,3 +38,4 @@ app.listen({ host: '0.0.0.0', port: 9000 }, (err, address) => {
 	}
 	console.log(`🚀 Server ready at: ${address}`);
 });
+

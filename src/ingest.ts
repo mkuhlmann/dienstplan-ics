@@ -4,7 +4,7 @@ import { prisma } from './db';
 import { getDiensteMap } from './dienste';
 import dayjs from 'dayjs';
 import fs from 'fs';
-import { dirname } from './util';
+import { dirname, getWeekNumber } from './util';
 
 class CellPointer {
 	x: number;
@@ -28,7 +28,7 @@ class CellPointer {
 		return cell ? cell.w : '';
 	}
 
-	getNumber() {
+	getNumber(): number {
 		return this.getCell().v;
 	}
 
@@ -129,8 +129,11 @@ export const ingest = async (fileName: string) => {
 		persons = findAndParseTable(cellPotiner, persons);
 	}
 
+	const overview = findAndParseOverviewTable(cellPotiner);
+
+
 	if(!_error) {
-		await insertDatabase(persons, date);
+		await insertDatabase(date, persons, overview);
 		deleteCache();
 	}
 	return _log;
@@ -140,7 +143,7 @@ const deleteCache = () => {
 	fs.rmSync(dirname('data', 'cache'), { recursive: true, force: true });
 }
 
-const insertDatabase = async (persons: Record<string, Person>, date: dayjs.Dayjs) => {
+const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>, overview: Record<number, Record<string, string>>) => {
 
 	const diensteMap = await getDiensteMap();
 
@@ -220,6 +223,22 @@ const insertDatabase = async (persons: Record<string, Person>, date: dayjs.Dayjs
 				endsAt = endsAt.add(1, 'day');
 			}
 
+			let week = 0;
+
+			// only include overview for TD
+			if(dienstName == 'TD' || dienstName == 'TD+SD') {
+				week = getWeekNumber(startsAt.toDate());
+			}
+
+			// and 1CN/ZNAN
+			// if(dienstName == '1CN' || dienstName == 'ZNAN') {
+			// 	week = getWeekNumber(startsAt.set('hour', 8).toDate());
+
+			// 	//handle edge case when starting on a sunday
+			// 	if(getWeekNumber(startsAt.set('hour', 8).add(1, 'day').toDate()) > week) {
+			// 		week++;
+			// 	}
+			// }
 
 			i++;
 			await prisma.dienstplan.create({
@@ -227,7 +246,8 @@ const insertDatabase = async (persons: Record<string, Person>, date: dayjs.Dayjs
 					personId: dbPerson.id,
 					dienstId: dienst.id,
 					startsAt: startsAt.toDate(),
-					endsAt: endsAt.toDate()
+					endsAt: endsAt.toDate(),
+					position: (overview[week] && overview[week][dbPerson.lastName]) ? overview[week][dbPerson.lastName] : null
 				}
 			});
 		}
@@ -320,3 +340,87 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 
 };
 
+const findAndParseOverviewTable = (cellPointer: CellPointer) => {
+	const overview: Record<number, Record<string, string>> = {};
+
+	log(`🔎 Looking for overview table starting at ${cellPointer}`);
+
+	let initialY = cellPointer.y;
+
+
+	// search for Name, Vorname
+	while (cellPointer.getString() != 'KW' && cellPointer.y - initialY < 100) {
+
+		// sometimes table is intended by one cell
+		cellPointer.x++;
+		if(cellPointer.getString() == 'KW') {
+			break;
+		}
+		cellPointer.x--;
+
+		cellPointer.y++;
+		
+	}
+
+	if (cellPointer.y - initialY >= 100) {
+		log(`⚠️ Could not find overview table, last cell was ${cellPointer}`);
+		return overview;
+	}
+
+
+	log(`✅ Found overview table starting at ${cellPointer}`);
+
+	const dienstNameStartCell = cellPointer.clone();
+	initialY = dienstNameStartCell.y;
+
+	while(dienstNameStartCell.getString() != '1CN-1' && dienstNameStartCell.y - initialY < 4) {
+		dienstNameStartCell.y++;
+	}
+
+	if (dienstNameStartCell.y - initialY >= 4) {
+		log(`⚠️ Could not find dienst names in overview table`);
+		return overview;
+	}
+	
+	log(`🔎 Looking for first KW starting at ${cellPointer}`);
+	while (!cellPointer.isInteger()) {
+		cellPointer.x++;
+	}
+
+	while (cellPointer.isInteger()) {
+		const week = cellPointer.getNumber();
+
+		const personCell = cellPointer.clone();
+		personCell.y = dienstNameStartCell.y;
+
+		const dienstNameCell = dienstNameStartCell.clone();
+
+		while (dienstNameCell.getString() != '1C TSA') {
+			const dienstName = dienstNameCell.getString();
+			const person = personCell.getString();
+
+			if(person.trim()) {
+				if (!overview[week]) {
+					overview[week] = {};
+				}
+
+				overview[week][person] = dienstName;
+			}
+
+			dienstNameCell.y++;
+			personCell.y++;
+		}
+
+
+		cellPointer.x++;
+		while (!cellPointer.isInteger() && cellPointer.x < 100) {
+			cellPointer.x++;
+		}
+	}
+
+
+	return overview;
+
+
+
+};

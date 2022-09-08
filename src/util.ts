@@ -1,5 +1,6 @@
 import path from 'path';
 import crypto from 'crypto';
+import dayjs from 'dayjs';
 
 
 
@@ -18,3 +19,7 @@ export const urlBase64Decode = (str: string) => {
 export const hmac = (data: string) => {
 	return urlBase64Encode(crypto.createHmac('sha1', process.env.SECRET_KEY ?? 'secret').update(data).digest('base64'));
 }
+
+export const getWeekNumber = function(date: Date){
+	return dayjs(date).week() -1;
+};

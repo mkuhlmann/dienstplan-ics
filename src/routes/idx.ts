@@ -14,7 +14,12 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			return reply.status(403).send('Invalid password');
 		}
 		
-		const file = fs.readFileSync(dirname(`views/preview.html`), 'utf-8');
+		let file = fs.readFileSync(dirname(`views/preview.html`), 'utf-8');
+
+		file = file
+			.replace('%BASEURL%', `${request.protocol}://${request.hostname}`);
+
+
 		return reply.type('text/html; charset=utf-8').send(file);
 	});
 

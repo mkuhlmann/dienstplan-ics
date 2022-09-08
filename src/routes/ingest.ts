@@ -41,8 +41,6 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		const upath = dirname('data', file.filename);
 		await pump(file.file, fs.createWriteStream(upath));
 
-		console.log('File uploaded to: ' + upath);
-
 		let _log = await ingest(upath);
 
 		return reply.type('text/html; charset=utf-8').send(`<pre>${_log}</pre>`);
