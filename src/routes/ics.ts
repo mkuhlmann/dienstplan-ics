@@ -20,7 +20,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 					id: request.query.id
 				}
 			});
-		} else if (request.query.name && request.query.name.length > 3) {
+		} else if (request.query.name && request.query.name.length > 2) {
 			person = await prisma.person.findFirst({
 				where: {
 					lastName: {
@@ -47,9 +47,13 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 	});
 
 
-	fastify.get<{ Querystring: { name: string } }>('/json', async (request, reply) => {
+	fastify.get<{ Querystring: { name: string, p?: string } }>('/json', async (request, reply) => {
 
-		if (!request.query.name || request.query.name.length < 3) {
+		if (process.env.PREVIEW_PASSWORD && request.query.p !== process.env.PREVIEW_PASSWORD) {
+			return reply.status(403).send({ error: 'Invalid password' });
+		}
+
+		if (!request.query.name || request.query.name.length < 2) {
 			reply.code(400);
 			return { error: 'Invalid name' };
 		}

@@ -97,6 +97,8 @@
 			document.documentElement.classList.remove('dark')
 		}
 
+		const p = new URLSearchParams(window.location.search).get('p') ?? '';
+
 		const app = createApp({
 			setup() {
 				const name = ref('');
@@ -132,7 +134,7 @@
 
 				const query = () => {
 					status.value = -1;
-					fetch(`/json?name=${name.value}`)
+					fetch(`/json?name=${name.value}&p=${p}`)
 						.then(response => response.json())
 						.then(_data => {
 							if(!_data.error) {
