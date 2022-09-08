@@ -11,20 +11,25 @@ import { dirname, hmac } from '../util';
 
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
 
-	fastify.get<{ Querystring: { name: string, hmac: string } }>('/ics', async (request, reply) => {
-		if (!request.query.name || request.query.name.length < 3) {
-			reply.code(400);
-			return 'Invalid name';
-		}
+	fastify.get<{ Querystring: { name?: string, id?: string, hmac: string } }>('/ics', async (request, reply) => {
+		let person: Person | null = null;
 
-		const person = await prisma.person.findFirst({
-			where: {
-				lastName: {
-					contains: request.query.name
+		if (request.query.id) {
+			person = await prisma.person.findFirst({
+				where: {
+					id: request.query.id
 				}
-			}
-		});
-
+			});
+		} else if (request.query.name && request.query.name.length > 3) {
+			person = await prisma.person.findFirst({
+				where: {
+					lastName: {
+						contains: request.query.name
+					}
+				}
+			});
+		}
+		
 		if (!person) {
 			reply.status(404);
 			return 'Person not found';
