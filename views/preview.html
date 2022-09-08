@@ -12,7 +12,7 @@
 	<script src="https://unpkg.com/dayjs@1.11.5/plugin/weekOfYear.js"></script>
 </head>
 
-<body>
+<body class="dark:bg-gray-900 dark:text-white">
 	<div id="app" class="m-5">
 		<h1 class="font-bold text-3xl mb-5">Dienstplan</h1>
 
@@ -90,6 +90,12 @@
 
 		dayjs.locale('de');
 		dayjs.extend(dayjs_plugin_weekOfYear);
+
+		if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+			document.documentElement.classList.add('dark')
+		} else {
+			document.documentElement.classList.remove('dark')
+		}
 
 		const app = createApp({
 			setup() {
