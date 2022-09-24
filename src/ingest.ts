@@ -108,7 +108,7 @@ export const ingest = async (fileName: string) => {
 		}
 	}
 
-	
+
 
 	log(`📅 Assumed Date: ${date.format('MMMM YYYY')}`);
 
@@ -124,7 +124,7 @@ export const ingest = async (fileName: string) => {
 	// table 1
 	persons = findAndParseTable(cellPotiner, persons);
 
-	if(!_error) {
+	if (!_error) {
 		// table 2
 		persons = findAndParseTable(cellPotiner, persons);
 	}
@@ -132,7 +132,7 @@ export const ingest = async (fileName: string) => {
 	const overview = findAndParseOverviewTable(cellPotiner);
 
 
-	if(!_error) {
+	if (!_error) {
 		await insertDatabase(date, persons, overview);
 		deleteCache();
 	}
@@ -197,7 +197,7 @@ const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>
 			let dienstName = day.schedule;
 
 			// freie Tage
-			if (['EZ', 'BV', 'Frei', 'FW', 'Url', 'FB', 'Feiertag'].includes(day.schedule)) {
+			if (['ez', 'bv', 'frei', 'fw', 'url', 'fb', 'feiertag'].includes(day.schedule.toLowerCase())) {
 				continue;
 			}
 
@@ -226,7 +226,7 @@ const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>
 			let week = 0;
 
 			// only include overview for TD
-			if(dienstName == 'TD' || dienstName == 'TD+SD') {
+			if (dienstName == 'TD' || dienstName == 'TD+SD') {
 				week = getWeekNumber(startsAt.toDate());
 			}
 
@@ -265,7 +265,7 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 		cellPointer.y++;
 	}
 
-	if (cellPointer.y - initialY >= 10) {
+	if (cellPointer.y - initialY >= 20) {
 		log(`⚠️ Could not find table`);
 		_error = true;
 		return persons;
@@ -288,20 +288,19 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 		return persons;
 	}
 
-	while (cellPointer.getString().toLowerCase().indexOf(',') !== -1) {
+	while (cellPointer.getString().toLowerCase().indexOf(',') !== -1 && cellPointer.getString().toLowerCase().indexOf('name') === -1) {
 		const name = cellPointer.getString().split(',');
 		let person = new Person(name[1].trim(), name[0].trim(), cellPointer.toString());
 		if (persons[person.lastName]) {
 			person = persons[person.lastName];
-
 			persons[person.lastName].cell = cellPointer.toString();
 		} else {
 			persons[person.lastName] = person;
 		}
 		cellPointer.y++;
-
 	}
-	log(`🧑‍⚕️ Found ${Object.keys(persons).length} persons`);
+
+	log(`🧑‍⚕️ Found ${Object.keys(persons).length} persons until ${cellPointer}`);
 
 	// find first day
 	cellPointer = startCell;
@@ -315,7 +314,7 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 
 	let j = 0;
 	let i = 0;
-	while (cellPointer.isInteger()) {
+	while (cellPointer.isInteger() && cellPointer.x < 100) {
 
 		i++;
 		for (const k in persons) {
@@ -353,13 +352,13 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 
 		// sometimes table is intended by one cell
 		cellPointer.x++;
-		if(cellPointer.getString() == 'KW') {
+		if (cellPointer.getString() == 'KW') {
 			break;
 		}
 		cellPointer.x--;
 
 		cellPointer.y++;
-		
+
 	}
 
 	if (cellPointer.y - initialY >= 100) {
@@ -373,7 +372,7 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 	const dienstNameStartCell = cellPointer.clone();
 	initialY = dienstNameStartCell.y;
 
-	while(dienstNameStartCell.getString() != '1CN-1' && dienstNameStartCell.y - initialY < 4) {
+	while (dienstNameStartCell.getString() != '1CN-1' && dienstNameStartCell.y - initialY < 4) {
 		dienstNameStartCell.y++;
 	}
 
@@ -381,7 +380,7 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 		log(`⚠️ Could not find dienst names in overview table`);
 		return overview;
 	}
-	
+
 	log(`🔎 Looking for first KW starting at ${cellPointer}`);
 	while (!cellPointer.isInteger()) {
 		cellPointer.x++;
@@ -399,7 +398,7 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 			const dienstName = dienstNameCell.getString();
 			const person = personCell.getString();
 
-			if(person.trim()) {
+			if (person.trim()) {
 				if (!overview[week]) {
 					overview[week] = {};
 				}

@@ -12,7 +12,7 @@
 	<script src="https://unpkg.com/dayjs@1.11.5/plugin/weekOfYear.js"></script>
 </head>
 
-<body class="dark:bg-gray-900 dark:text-white">
+<body class="dark:bg-gray-900 dark:text-gray-300">
 	<div id="app" class="m-5">
 		<h1 class="font-bold text-3xl mb-5">Dienstplan</h1>
 
@@ -23,7 +23,7 @@
 
 			<form v-on:submit.prevent="query()">
 				<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Mindestens drei Zeichen des Nachnamens eingeben:</label>
-				<div class="flex gap-5" >
+				<div class="flex gap-5">
 
 					<input type="text"
 						class="flex-1 g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -38,8 +38,12 @@
 
 			<div role="status" v-if="status == -1" class="my-5">
 				<svg aria-hidden="true" class="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-					<path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/>
+					<path
+						d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+						fill="currentColor" />
+					<path
+						d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+						fill="currentFill" />
 				</svg>
 				<span class="sr-only">Loading...</span>
 			</div>
@@ -50,8 +54,8 @@
 				<div class="mb-5">
 					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
 					<input name="ics" type="text"
-					class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-					:value="`${baseUrl}/ics?name=${encodeURIComponent(person.lastName)}&id=${person.id}&hmac=${hmac}`" v-on:click="copyInput" />
+						class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+						:value="`${baseUrl}/ics?name=${encodeURIComponent(person.lastName)}&id=${person.id}&hmac=${hmac}`" v-on:click="copyInput" />
 					<div v-if="showCopied" class="font-bold text-green-500">ℹ️ URL in die Zwischenablage kopiert.</div>
 				</div>
 
@@ -61,7 +65,7 @@
 						<img src="https://s.mkuhlmann.org/y4nU5aS/firefox_9pRM9LSXto.png" class="inline-block" />
 						<img src="https://s.mkuhlmann.org/NJSa0rE/firefox_eTEe4Jdd45.png" class="inline-block" />
 					</div>
-					<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für  Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
+					<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
 					<div v-if="showAnleitung == 2">
 						<img src="https://s.mkuhlmann.org/UkPqKFi/thunderbird_quh2XkADNk.png" class="inline-block" />
 						<img src="https://s.mkuhlmann.org/rd37Ceh/thunderbird_imt0T2OH1k.png" class="inline-block" />
@@ -70,17 +74,17 @@
 				</div>
 
 				<hr class="mb-5" />
-		
+
 				<div>
 					<div v-for="(kw, kwNum) in dienstplan">
 						<h4 class="italic mb-2">KW {{ kwNum }} ({{ formatMin(kw.sum) }})</h4>
-						<div class="border px-4 py-2 inline-block mb-3 mr-3" v-for="d in kw.dienste">
+						<div class="border dark:border-gray-400 px-4 py-2 inline-block mb-3 mr-3" style="min-width: 250px;" v-for="d in kw.dienste">
 							<div>
 								<span class="">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</span>
 								<span class="font-bold float-right ml-10">{{ d.dienst.shortName }}</span>
 							</div>
 							<div>
-								<span class="italic">{{  dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span>
+								<span class="italic">{{ dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span>
 								<span class="float-right ml-10" v-if="d.position">({{ d.position }})</span>
 							</div>
 						</div>
@@ -92,7 +96,7 @@
 
 
 	<script type="module">
-		import { createApp, ref, watch } from 'https://unpkg.com/vue@3.2.39/dist/vue.esm-browser.js';
+		import {createApp, ref, watch} from 'https://unpkg.com/vue@3.2.39/dist/vue.esm-browser.js';
 
 		const baseUrl = 'https://dienstplan.app.mkuhlmann.org';
 
@@ -113,7 +117,7 @@
 				const status = ref(0);
 
 				watch(name, (newName) => {
-					if(status.value != 0) {
+					if (status.value != 0) {
 						status.value = 0;
 					}
 				});
@@ -145,7 +149,7 @@
 					fetch(`/json?name=${name.value}&p=${p}`)
 						.then(response => response.json())
 						.then(_data => {
-							if(!_data.error) {
+							if (!_data.error) {
 								status.value = 1;
 								person.value = _data.person;
 								hmac.value = _data.hmac;
@@ -157,13 +161,13 @@
 				};
 
 				const dienstplanToKW = (dienstplan) => {
-					const dienstplanKW = { };
+					const dienstplanKW = {};
 
 					dienstplan.forEach(d => {
 						const date = dayjs(d.startsAt);
-						const kw = date.week();
+						const kw = `${date.week()} ${date.year()} `;
 
-						if(!dienstplanKW[kw]) {
+						if (!dienstplanKW[kw]) {
 							dienstplanKW[kw] = {
 								sum: 0,
 								dienste: []
