@@ -22,6 +22,11 @@ process.env.TZ = 'UTC';
 
 
 const app = fastify({
+	trustProxy: true
+});
+
+app.addHook('onRequest', async (request, reply) => {
+	console.log(`${dayjs().format('HH:mm:ss')} :: ${request.ip} - ${request.method.padEnd(5)} ${request.url}`);
 });
 
 app.register(fastifyMultipart);
