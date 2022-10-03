@@ -6,6 +6,7 @@ import { ingest } from '../ingest';
 import util from 'util';
 import { dirname } from '../util';
 import { MultipartValue } from '@fastify/multipart';
+import { prisma } from '../db';
 
 const pump = util.promisify(pipeline);
 
@@ -26,7 +27,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 	fastify.post('/ingest', async (request, reply) => {
 		const file = await request.file();
 
-		if(!file.fields.password || (file.fields.password as any as MultipartValue<string>).value !== process.env.INGEST_PASSWORD) {
+		if (!file.fields.password || (file.fields.password as any as MultipartValue<string>).value !== process.env.INGEST_PASSWORD) {
 			return reply.code(401).send('Invalid password');
 		}
 
@@ -34,7 +35,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			return reply.code(400).send('No file uploaded');
 		}
 
-		if(!file.filename.match(/\d{4}?-\d{2}\.xlsx/)) {
+		if (!file.filename.match(/\d{4}?-\d{2}\.xlsx/)) {
 			return reply.code(400).send('Invalid filename');
 		}
 
@@ -44,6 +45,32 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		let _log = await ingest(upath);
 
 		return reply.type('text/html; charset=utf-8').send(`<pre>${_log}</pre>`);
+	});
+
+	fastify.post<{
+		Body: {
+			password: string;
+		}
+	}>('/reingest', async (request, reply) => {
+
+		if (request.body.password !== process.env.INGEST_PASSWORD) {
+			return reply.code(401).send('Invalid password');
+		}
+
+		await prisma.dienstplan.deleteMany();
+
+		// get all files ending with .xlsx
+		let files = fs.readdirSync(dirname('data')).filter(f => f.match(/\d{4}?-\d{2}\.xlsx/));
+
+		let _log = '';
+
+		for (let file of files) {
+			_log += '---------------------------- Reingesting ' + file + '\n';
+			_log += await ingest(dirname('data', file));
+		}
+
+		return reply.type('text/html; charset=utf-8').send(`<pre>${_log}</pre>`);
+
 	});
 
 };

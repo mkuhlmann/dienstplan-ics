@@ -1,6 +1,7 @@
 import fastify from 'fastify';
 import fastifyAutoload from '@fastify/autoload';
 import fastifyMultipart from '@fastify/multipart';
+import fastifyFormbody from '@fastify/formbody';
 import * as dotenv from 'dotenv';
 
 import path from 'path';
@@ -30,6 +31,7 @@ app.addHook('onRequest', async (request, reply) => {
 });
 
 app.register(fastifyMultipart);
+app.register(fastifyFormbody);
 
 app.register(fastifyAutoload, {
 	dir: path.join(__dirname, 'routes'),

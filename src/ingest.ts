@@ -25,7 +25,8 @@ class CellPointer {
 
 	getString(): string {
 		const cell = this.getCell();
-		return cell ? cell.w : '';
+		if (!cell) return '';
+		return cell.w ? this.decodeString(cell.w) : '';
 	}
 
 	getNumber(): number {
@@ -43,6 +44,10 @@ class CellPointer {
 
 	clone() {
 		return new CellPointer(this.sheet, this.x, this.y);
+	}
+
+	decodeString(s: string) {
+		return s.replace('¸', 'ü').replace('ˆ', 'ö');
 	}
 
 	[util.inspect.custom]() {
