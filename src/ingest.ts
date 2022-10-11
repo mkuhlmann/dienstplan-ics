@@ -287,7 +287,7 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 		cellPointer.y++;
 	}
 
-	if (cellPointer.y - initialY >= 10) {
+	if (cellPointer.y - initialY >= 50) {
 		log(`⚠️ Could not find names`);
 		_error = true;
 		return persons;
@@ -421,6 +421,8 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 			cellPointer.x++;
 		}
 	}
+
+	log(`📅 Processed ${Object.keys(overview).length} weeks`);
 
 
 	return overview;

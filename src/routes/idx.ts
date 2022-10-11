@@ -6,14 +6,14 @@ import fs from 'fs';
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
 
 	fastify.get('/', async (request, reply) => {
-		return reply.redirect('https://mkuhlmann.org');
+		return reply.status(404).send('Not found');
 	});
 
 	fastify.get<{ Querystring: { p: string } }>('/preview', async (request, reply) => {
-		if(process.env.PREVIEW_PASSWORD && request.query.p !== process.env.PREVIEW_PASSWORD) {
+		if (process.env.PREVIEW_PASSWORD && request.query.p !== process.env.PREVIEW_PASSWORD) {
 			return reply.status(403).send('Invalid password');
 		}
-		
+
 		let file = fs.readFileSync(dirname(`views/preview.html`), 'utf-8');
 
 		// file = file
