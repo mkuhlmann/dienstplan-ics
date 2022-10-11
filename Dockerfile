@@ -9,4 +9,7 @@ FROM node:alpine as run-stage
 WORKDIR /app
 COPY --from=build-stage /app /app
 RUN npm prune --omit dev
+
+EXPOSE 9000
+
 CMD ["npm", "run", "docker"]
