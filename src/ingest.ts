@@ -266,11 +266,11 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 	log(`🔎 Looking for table starting at ${cellPointer}`);
 	let initialY = cellPointer.y;
 	// search for Name, Vorname
-	while (cellPointer.getString().toLowerCase().indexOf('name') === -1 && cellPointer.y - initialY < 10) {
+	while (cellPointer.getString().toLowerCase().indexOf('name') === -1 && cellPointer.y - initialY < 50) {
 		cellPointer.y++;
 	}
 
-	if (cellPointer.y - initialY >= 20) {
+	if (cellPointer.y - initialY >= 50) {
 		log(`⚠️ Could not find table`);
 		_error = true;
 		return persons;
@@ -287,7 +287,7 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 		cellPointer.y++;
 	}
 
-	if (cellPointer.y - initialY >= 50) {
+	if (cellPointer.y - initialY >= 10) {
 		log(`⚠️ Could not find names`);
 		_error = true;
 		return persons;
