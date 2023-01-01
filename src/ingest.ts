@@ -98,6 +98,15 @@ export const ingest = async (fileName: string) => {
 
 	log(`📥 Ingesting ${fileName}`);
 
+	// create database backup
+	log('📦 Creating database backup');
+
+	if (!fs.existsSync(dirname('data', 'backups'))) {
+		fs.mkdirSync(dirname('data', 'backups'));
+	}
+
+	fs.copyFileSync(dirname('data', 'database.db'), dirname('data', 'backups', `${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.db`));
+
 	let date: dayjs.Dayjs;
 
 	let match = fileName.match(/\/(\d{4})-(\d{2})\.xlsx$/);
