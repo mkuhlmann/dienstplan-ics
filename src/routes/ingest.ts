@@ -7,11 +7,20 @@ import util from 'util';
 import { dirname } from '../util';
 import { MultipartValue } from '@fastify/multipart';
 import { prisma } from '../db';
+import { ingest as ingestNg } from '../ingestNg';
 
 const pump = util.promisify(pipeline);
 
 
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
+
+	fastify.get('/ingestng', async (request, reply) => {
+
+		let _log = await ingestNg('/mnt/c/Etc/ASS_DP_01_2023_V2.xlsx');
+
+
+		return reply.type('text/html; charset=utf-8').send(`<pre>${_log}</pre>`);
+	});
 
 	fastify.get('/ingest', async (request, reply) => {
 		// read file
