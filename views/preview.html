@@ -1,202 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dienstplan</title>
+		<script src="https://cdn.tailwindcss.com/3.1.8"></script>
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/dayjs.min.js"
+			integrity="sha512-hcV6DX35BKgiTiWYrJgPbu3FxS6CsCjKgmrsPRpUPkXWbvPiKxvSVSdhWX0yXcPctOI2FJ4WP6N1zH+17B/sAA=="
+			crossorigin="anonymous"
+			referrerpolicy="no-referrer"
+		></script>
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/locale/de.min.js"
+			integrity="sha512-vFPzRb4GGRhFsqFObk7WKkfNeutbYyeeFkFRc9XFtMzmltAfF+G9S+cc8EzrrUpBereS+NrKqLbr0a+0lLSuvg=="
+			crossorigin="anonymous"
+			referrerpolicy="no-referrer"
+		></script>
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.7/plugin/weekOfYear.min.js"
+			integrity="sha512-s8tCeGMT//gKa3EU34LbIuHN/3EXUMUNYcELdPiAY4pm90ujxmmzgMrnjnSjXKfKSGGQIuL/m3iHAcZhRixP1A=="
+			crossorigin="anonymous"
+			referrerpolicy="no-referrer"
+		></script>
+	</head>
 
-<head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Dienstplan</title>
-	<script src="https://cdn.tailwindcss.com/3.1.8"></script>
-	<script src="https://unpkg.com/dayjs@1.11.5/dayjs.min.js"></script>
-	<script src="https://unpkg.com/dayjs@1.11.5/locale/de.js"></script>
-	<script src="https://unpkg.com/dayjs@1.11.5/plugin/weekOfYear.js"></script>
-</head>
+	<body class="dark:bg-gray-900 dark:text-gray-300">
+		<div id="app" class="m-5">
+			<h1 class="font-bold text-3xl mb-5">Dienstplan</h1>
 
-<body class="dark:bg-gray-900 dark:text-gray-300">
-	<div id="app" class="m-5">
-		<h1 class="font-bold text-3xl mb-5">Dienstplan</h1>
+			<div class="italic" v-bind:style="{ display: 'none' }">Lade ...</div>
 
-		<div class="italic" v-bind:style="{ display: 'none' }">Lade ...</div>
-
-
-		<div class="hidden" v-bind:style="{ display: 'block' }">
-
-			<form v-on:submit.prevent="query()">
-				<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Mindestens drei Zeichen des Nachnamens eingeben:</label>
-				<div class="flex gap-5">
-
-					<input type="text"
-						class="flex-1 g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-						v-model="name" placeholder="Nachname ..." />
-					<button class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Dienstplan abrufen</button>
-				</div>
-			</form>
-
-			<div v-if="status == 2" class="bg-red-400 border-l-5 border-l-red-600 text-white p-5 my-5">
-				Kein Dienstplan für {{ name }} gefunden.
-			</div>
-
-			<div role="status" v-if="status == -1" class="my-5">
-				<svg aria-hidden="true" class="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path
-						d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-						fill="currentColor" />
-					<path
-						d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-						fill="currentFill" />
-				</svg>
-				<span class="sr-only">Loading...</span>
-			</div>
-
-			<div v-if="status == 1">
-				<h2 class="text-2xl my-5">Dienstplan für {{ person.lastName }}, {{ person.firstName }}</h2>
-
-				<div class="mb-5">
-					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
-					<input name="ics" type="text"
-						class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-						:value="`${baseUrl}/ics?name=${encodeURIComponent(person.lastName)}&id=${person.id}&hmac=${hmac}`" v-on:click="copyInput" />
-					<div v-if="showCopied" class="font-bold text-green-500">ℹ️ URL in die Zwischenablage kopiert.</div>
-				</div>
-
-				<div class="mb-5">
-					<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(1)">Anleitung für Google Calendar {{ showAnleitung == 1 ? '👇' : '👈' }}</div>
-					<div v-if="showAnleitung == 1">
-						<img src="https://s.mkuhlmann.org/y4nU5aS/firefox_9pRM9LSXto.png" class="inline-block" />
-						<img src="https://s.mkuhlmann.org/NJSa0rE/firefox_eTEe4Jdd45.png" class="inline-block" />
+			<div class="hidden" v-bind:style="{ display: 'block' }">
+				<form v-on:submit.prevent="query()">
+					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Mindestens drei Zeichen des Nachnamens eingeben:</label>
+					<div class="flex gap-5">
+						<input
+							type="text"
+							class="flex-1 g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+							v-model="name"
+							placeholder="Nachname ..."
+						/>
+						<button class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Dienstplan abrufen</button>
 					</div>
-					<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
-					<div v-if="showAnleitung == 2">
-						<img src="https://s.mkuhlmann.org/UkPqKFi/thunderbird_quh2XkADNk.png" class="inline-block" />
-						<img src="https://s.mkuhlmann.org/rd37Ceh/thunderbird_imt0T2OH1k.png" class="inline-block" />
-						<img src="https://s.mkuhlmann.org/gWOiENE/thunderbird_QB3Az8akab.png" class="inline-block" />
-					</div>
+				</form>
+
+				<div v-if="status == 2" class="bg-red-400 border-l-5 border-l-red-600 text-white p-5 my-5">Kein Dienstplan für {{ name }} gefunden.</div>
+
+				<div role="status" v-if="status == -1" class="my-5">
+					<svg aria-hidden="true" class="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path
+							d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+							fill="currentColor"
+						/>
+						<path
+							d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+							fill="currentFill"
+						/>
+					</svg>
+					<span class="sr-only">Loading...</span>
 				</div>
 
-				<hr class="mb-5" />
+				<div v-if="status == 1">
+					<h2 class="text-2xl my-5">Dienstplan für {{ person.lastName }}, {{ person.firstName }}</h2>
 
-				<div>
-					<div v-for="(kw, kwNum) in dienstplan">
-						<h4 class="italic mb-2">KW {{ kwNum }} ({{ formatMin(kw.sum) }})</h4>
-						<div class="border dark:border-gray-400 px-4 py-2 inline-block mb-3 mr-3" style="min-width: 250px;" v-for="d in kw.dienste">
-							<div>
-								<span class="">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</span>
-								<span class="font-bold float-right ml-10">{{ d.dienst.shortName }}</span>
-							</div>
-							<div>
-								<span class="italic">{{ dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span>
-								<span class="float-right ml-10" v-if="d.position">({{ d.position }})</span>
+					<div class="mb-5">
+						<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
+						<input
+							name="ics"
+							type="text"
+							class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+							:value="`${baseUrl}/ics?name=${encodeURIComponent(person.lastName)}&id=${person.id}&hmac=${hmac}`"
+							v-on:click="copyInput"
+						/>
+						<div v-if="showCopied" class="font-bold text-green-500">ℹ️ URL in die Zwischenablage kopiert.</div>
+					</div>
+
+					<div class="mb-5">
+						<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(1)">Anleitung für Google Calendar {{ showAnleitung == 1 ? '👇' : '👈' }}</div>
+						<div v-if="showAnleitung == 1">
+							<img src="https://s.mkuhlmann.org/y4nU5aS/firefox_9pRM9LSXto.png" class="inline-block" />
+							<img src="https://s.mkuhlmann.org/NJSa0rE/firefox_eTEe4Jdd45.png" class="inline-block" />
+						</div>
+						<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
+						<div v-if="showAnleitung == 2">
+							<img src="https://s.mkuhlmann.org/UkPqKFi/thunderbird_quh2XkADNk.png" class="inline-block" />
+							<img src="https://s.mkuhlmann.org/rd37Ceh/thunderbird_imt0T2OH1k.png" class="inline-block" />
+							<img src="https://s.mkuhlmann.org/gWOiENE/thunderbird_QB3Az8akab.png" class="inline-block" />
+						</div>
+					</div>
+
+					<hr class="mb-5" />
+
+					<div>
+						<div v-for="(kw, kwNum) in dienstplan">
+							<h4 class="italic mb-2">KW {{ kwNum }} ({{ formatMin(kw.sum) }})</h4>
+							<div class="border dark:border-gray-400 px-4 py-2 inline-block mb-3 mr-3" style="min-width: 250px" v-for="d in kw.dienste">
+								<div>
+									<span class="">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</span>
+									<span class="font-bold float-right ml-10">{{ d.dienst.shortName }}</span>
+								</div>
+								<div>
+									<span class="italic">{{ dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span>
+									<span class="float-right ml-10" v-if="d.position">({{ d.position }})</span>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 
+		<script type="module">
+			import { createApp, ref, watch } from 'https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.47/vue.esm-browser.min.js';
 
-	<script type="module">
-		import {createApp, ref, watch} from 'https://unpkg.com/vue@3.2.39/dist/vue.esm-browser.js';
+			const baseUrl = 'https://dienstplan.app.mkuhlmann.org';
 
-		const baseUrl = 'https://dienstplan.app.mkuhlmann.org';
+			dayjs.locale('de');
+			dayjs.extend(dayjs_plugin_weekOfYear);
 
-		dayjs.locale('de');
-		dayjs.extend(dayjs_plugin_weekOfYear);
+			if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+				document.documentElement.classList.add('dark');
+			} else {
+				document.documentElement.classList.remove('dark');
+			}
 
-		if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-			document.documentElement.classList.add('dark')
-		} else {
-			document.documentElement.classList.remove('dark')
-		}
+			const p = new URLSearchParams(window.location.search).get('p') ?? '';
 
-		const p = new URLSearchParams(window.location.search).get('p') ?? '';
+			const app = createApp({
+				setup() {
+					const name = ref('');
+					const status = ref(0);
 
-		const app = createApp({
-			setup() {
-				const name = ref('');
-				const status = ref(0);
-
-				watch(name, (newName) => {
-					if (status.value != 0) {
-						status.value = 0;
-					}
-				});
-
-				const hmac = ref('');
-				const person = ref({});
-				const dienstplan = ref({});
-				const showAnleitung = ref(0);
-
-				const toggleAnleitung = (val) => {
-					showAnleitung.value = (showAnleitung.value == val) ? 0 : val;
-				};
-
-				const showCopied = ref(false);
-
-				const copyInput = (e) => {
-					e.target.select();
-					e.target.setSelectionRange(0, 99999);
-					document.execCommand('copy');
-
-					showCopied.value = true;
-					setTimeout(() => {
-						showCopied.value = false;
-					}, 5000);
-				};
-
-				const query = () => {
-					status.value = -1;
-					fetch(`/json?name=${name.value}&p=${p}`)
-						.then(response => response.json())
-						.then(_data => {
-							if (!_data.error) {
-								status.value = 1;
-								person.value = _data.person;
-								hmac.value = _data.hmac;
-								dienstplan.value = dienstplanToKW(_data.dienstplan);
-							} else {
-								status.value = 2;
-							}
-						});
-				};
-
-				const dienstplanToKW = (dienstplan) => {
-					const dienstplanKW = {};
-
-					dienstplan.forEach(d => {
-						const date = dayjs(d.startsAt);
-						const kw = `${date.week()} ${date.year()} `;
-
-						if (!dienstplanKW[kw]) {
-							dienstplanKW[kw] = {
-								sum: 0,
-								dienste: []
-							};
+					watch(name, (newName) => {
+						if (status.value != 0) {
+							status.value = 0;
 						}
-						dienstplanKW[kw].sum += Math.round((new Date(d.endsAt).getTime() - new Date(d.startsAt).getTime()) / 1000 / 60);
-
-						dienstplanKW[kw].dienste.push(d);
 					});
 
-					console.log(dienstplanKW);
-					return dienstplanKW;
-				};
+					const hmac = ref('');
+					const person = ref({});
+					const dienstplan = ref({});
+					const showAnleitung = ref(0);
 
-				const formatMin = (min) => {
-					const h = Math.floor(min / 60);
-					const m = min % 60;
+					const toggleAnleitung = (val) => {
+						showAnleitung.value = showAnleitung.value == val ? 0 : val;
+					};
 
-					return `${h}h ${m}min`;
-				};
+					const showCopied = ref(false);
 
-				return {baseUrl, name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, formatMin, copyInput, query, encodeURIComponent};
-			}
-		});
+					const copyInput = (e) => {
+						e.target.select();
+						e.target.setSelectionRange(0, 99999);
+						document.execCommand('copy');
 
-		app.config.globalProperties.dayjs = dayjs;
+						showCopied.value = true;
+						setTimeout(() => {
+							showCopied.value = false;
+						}, 5000);
+					};
 
-		app.mount('#app');
-	</script>
-</body>
+					const query = () => {
+						status.value = -1;
+						fetch(`/json?name=${name.value}&p=${p}`)
+							.then((response) => response.json())
+							.then((_data) => {
+								if (!_data.error) {
+									status.value = 1;
+									person.value = _data.person;
+									hmac.value = _data.hmac;
+									dienstplan.value = dienstplanToKW(_data.dienstplan);
+								} else {
+									status.value = 2;
+								}
+							});
+					};
 
+					const dienstplanToKW = (dienstplan) => {
+						const dienstplanKW = {};
+
+						dienstplan.forEach((d) => {
+							const date = dayjs(d.startsAt);
+							const kw = `${date.week()} ${date.year()} `;
+
+							if (!dienstplanKW[kw]) {
+								dienstplanKW[kw] = {
+									sum: 0,
+									dienste: [],
+								};
+							}
+							dienstplanKW[kw].sum += Math.round((new Date(d.endsAt).getTime() - new Date(d.startsAt).getTime()) / 1000 / 60);
+
+							dienstplanKW[kw].dienste.push(d);
+						});
+
+						console.log(dienstplanKW);
+						return dienstplanKW;
+					};
+
+					const formatMin = (min) => {
+						const h = Math.floor(min / 60);
+						const m = min % 60;
+
+						return `${h}h ${m}min`;
+					};
+
+					return { baseUrl, name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, formatMin, copyInput, query, encodeURIComponent };
+				},
+			});
+
+			app.config.globalProperties.dayjs = dayjs;
+
+			app.mount('#app');
+		</script>
+	</body>
 </html>

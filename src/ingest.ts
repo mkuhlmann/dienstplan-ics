@@ -261,7 +261,7 @@ const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>
 					dienstId: dienst.id,
 					startsAt: startsAt.toDate(),
 					endsAt: endsAt.toDate(),
-					position: (overview[week] && overview[week][dbPerson.lastName]) ? overview[week][dbPerson.lastName] : null
+					position: (week != null && overview[week] && overview[week][dbPerson.lastName]) ? overview[week][dbPerson.lastName] : null
 				}
 			});
 		}

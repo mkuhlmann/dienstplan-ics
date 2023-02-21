@@ -102,6 +102,24 @@ const findAndParseTable = (cellPointer: CellPointer) => {
 	const startCell = cellPointer.clone();
 	log(`✅ Found table starting at ${startCell}`);
 
+	parseTable(startCell);
+
+
+
 	return true;
 
+};
+
+
+const parseTable = (cellPointer: CellPointer) => {
+	log(`📄 Parsing table starting at ${cellPointer}`);
+
+	let row = 0;
+
+	do {
+		row++;
+		cellPointer.y++;
+	} while (!cellPointer.getString().includes('Dienst'));
+
+	log(`✅ Parsed ${row} rows`);
 };

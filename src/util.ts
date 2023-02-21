@@ -21,5 +21,5 @@ export const hmac = (data: string) => {
 }
 
 export const getWeekNumber = function(date: Date){
-	return dayjs(date).week() -1;
+	return dayjs(date).week();
 };

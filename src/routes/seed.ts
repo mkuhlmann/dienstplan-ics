@@ -12,8 +12,6 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			return reply.code(400).send('Database is not empty');
 		}
 
-
-
 		const dienste: Prisma.XOR<Prisma.DienstCreateInput, Prisma.DienstUncheckedCreateInput>[] = [
 			{
 				shortName: 'TD',
