@@ -48,7 +48,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		return await getIcs(person, request.query.scope === 'funktion');
 	});
 
-	fastify.get<{ Querystring: { name: string; p?: string } }>('/json', async (request, reply) => {
+	fastify.get<{ Querystring: { name: string; p?: string; scope?: string } }>('/json', async (request, reply) => {
 		if (process.env.PREVIEW_PASSWORD && request.query.p !== process.env.PREVIEW_PASSWORD) {
 			return reply.status(403).send({ error: 'Invalid password' });
 		}
@@ -56,6 +56,10 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		if (!request.query.name || request.query.name.length < 2) {
 			reply.code(400);
 			return { error: 'Invalid name' };
+		}
+
+		if (!request.query.scope || !['funktion', 'gesamt'].includes(request.query.scope)) {
+			request.query.scope = 'gesamt';
 		}
 
 		const person = await prisma.person.findFirst({
@@ -71,14 +75,29 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			return { error: 'Person not found' };
 		}
 
-		const dienstplan = await prisma.dienstplan.findMany({
-			where: {
-				personId: person.id,
-			},
-			orderBy: {
-				startsAt: 'asc',
-			},
-		});
+		let dienstplan: Dienstplan[] = [];
+
+		if (request.query.scope === 'funktion')
+			dienstplan = await prisma.dienstplan.findMany({
+				where: {
+					personId: person.id,
+					dienst: {
+						fullDay: true,
+					},
+				},
+				orderBy: {
+					startsAt: 'asc',
+				},
+			});
+		else
+			dienstplan = await prisma.dienstplan.findMany({
+				where: {
+					personId: person.id,
+				},
+				orderBy: {
+					startsAt: 'asc',
+				},
+			});
 
 		const dienste = await getDiensteMap(true);
 

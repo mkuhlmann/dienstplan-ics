@@ -192,9 +192,13 @@
 						}, 5000);
 					};
 
+					watch(subscribeScope, (newScope) => {
+						query();
+					});
+
 					const query = () => {
 						status.value = -1;
-						fetch(`/json?name=${name.value}&p=${p}`)
+						fetch(`/json?name=${name.value}&p=${p}&scope=${subscribeScope.value}`)
 							.then((response) => response.json())
 							.then((_data) => {
 								if (!_data.error) {
