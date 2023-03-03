@@ -8,16 +8,43 @@
 		<script src="https://cdn.tailwindcss.com/3.1.8"></script>
 	</head>
 	<body class="dark:bg-gray-900 dark:text-white">
+		<div id="sluggish" class="absolute top-0 left-0 -z-50 flex h-screen w-screen items-center justify-center opacity-0 transition-opacity">
+			<div style="font-size: 500px">🥴</div>
+		</div>
 		<div class="flex h-screen items-center justify-center">
 			<div>
 				<h1 class="mb-10 text-center text-4xl font-thin">Dienstplan</h1>
-				<input
-					name="password"
-					type="password"
-					placeholder="Password?"
-					class="block rounded-lg border border-gray-300 p-2.5 text-2xl text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-				/>
+				<form>
+					<input
+						name="password"
+						type="password"
+						placeholder="Password?"
+						class="block rounded-lg border border-gray-300 p-2.5 text-2xl text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+					/>
+				</form>
 			</div>
 		</div>
+
+		<script lang="text/javascript">
+			const form = document.querySelector('form');
+			form.addEventListener('submit', (e) => {
+				e.preventDefault();
+				const formData = new FormData(form);
+				const password = formData.get('password');
+
+				fetch(`/preview?p=${password}`).then((res) => {
+					if (res.status === 200) {
+						window.location.href = '/preview?p=' + password;
+					} else {
+						// change #sluggish to #sluggish.opacity-100 for 2 seconds
+						const sluggish = document.querySelector('#sluggish');
+						sluggish.classList.add('opacity-50');
+						setTimeout(() => {
+							sluggish.classList.remove('opacity-50');
+						}, 2000);
+					}
+				});
+			});
+		</script>
 	</body>
 </html>
