@@ -1,28 +1,47 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<meta charset='utf-8'>
-	<meta http-equiv='X-UA-Compatible' content='IE=edge'>
-	<title>Ingest</title>
-	<meta name='viewport' content='width=device-width, initial-scale=1'>
-	<script src="https://cdn.tailwindcss.com/3.1.8"></script>
-</head>
-<body class="dark:bg-gray-900 dark:text-white p-5">
-	<h1 class="text-3xl my-5">Ingest</h1>
-	<form method="post" action="/ingest" enctype="multipart/form-data">
-		<label for="password"  class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Password: </label>
-		<input type="password" name="password" class=" g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" /><br><br>
-		<input type="file" name="file" /><br><br>
-		<input type="submit"   class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded" value="Upload" />
-	</form>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<title>Ingest</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script src="https://cdn.tailwindcss.com/3.1.8"></script>
+	</head>
+	<body class="p-5 dark:bg-gray-900 dark:text-white">
+		<h1 class="my-5 text-3xl">Ingest</h1>
+		<form method="post" action="/ingest" enctype="multipart/form-data">
+			<label for="password" class="mb-2 block text-sm font-bold text-gray-900 dark:text-gray-300">Password: </label>
+			<input
+				type="password"
+				name="password"
+				class="g-gray-50 block rounded-lg border border-gray-300 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+			/><br /><br />
+			<input type="file" name="file" /><br /><br />
+			<input type="submit" class="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-700" value="Upload" />
+		</form>
+		<h1 class="my-5 text-3xl">Ingest Funktion</h1>
+		<form method="post" action="/ingest-funktion" enctype="multipart/form-data">
+			<label for="password" class="mb-2 block text-sm font-bold text-gray-900 dark:text-gray-300">Password: </label>
+			<input
+				type="password"
+				name="password"
+				class="g-gray-50 block rounded-lg border border-gray-300 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+			/><br /><br />
+			<input type="file" name="file" /><br /><br />
+			<input type="submit" class="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-700" value="Upload" />
+		</form>
 
-	<hr class="my-5">
+		<hr class="my-5" />
 
-	<form method="post" action="/reingest">
-		<label for="password"  class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Password: </label>
-		<input type="password" name="password" class=" g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" /><br><br>
-		
-		<input type="submit"   class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded" value="Reingest" />
-	</form>
-</body>
+		<form method="post" action="/reingest">
+			<label for="password" class="mb-2 block text-sm font-bold text-gray-900 dark:text-gray-300">Password: </label>
+			<input
+				type="password"
+				name="password"
+				class="g-gray-50 block rounded-lg border border-gray-300 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+			/><br /><br />
+
+			<input type="submit" class="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-700" value="Reingest" />
+		</form>
+	</body>
 </html>

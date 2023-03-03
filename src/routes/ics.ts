@@ -3,33 +3,35 @@ import { FastifyPluginAsync } from 'fastify';
 import crypto from 'crypto';
 import { getDiensteMap } from '../dienste';
 import dayjs from 'dayjs';
-import { Person } from '.prisma/client';
+import { Dienstplan, Person } from '.prisma/client';
 import path from 'path';
 import fs from 'fs';
 import { dirname, hmac } from '../util';
 
-
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
-
-	fastify.get<{ Querystring: { name?: string, id?: string, hmac: string } }>('/ics', async (request, reply) => {
+	fastify.get<{ Querystring: { name?: string; id?: string; hmac: string; scope?: string } }>('/ics', async (request, reply) => {
 		let person: Person | null = null;
 
 		if (request.query.id) {
 			person = await prisma.person.findFirst({
 				where: {
-					id: request.query.id
-				}
+					id: request.query.id,
+				},
 			});
 		} else if (request.query.name && request.query.name.length > 2) {
 			person = await prisma.person.findFirst({
 				where: {
 					lastName: {
-						contains: request.query.name
-					}
-				}
+						contains: request.query.name,
+					},
+				},
 			});
 		}
-		
+
+		if (!request.query.scope || !['funktion', 'gesamt'].includes(request.query.scope)) {
+			request.query.scope = 'gesamt';
+		}
+
 		if (!person) {
 			reply.status(404);
 			return 'Person not found';
@@ -41,14 +43,12 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		}
 
 		reply.header('Content-Type', 'text/calendar; charset=utf-8');
-		reply.header('Content-Disposition', `attachment; filename="${person.lastName}.ics"`);
+		reply.header('Content-Disposition', `attachment; filename="${person.lastName}_${request.query.scope}.ics"`);
 
-		return await getIcs(person);
+		return await getIcs(person, request.query.scope === 'funktion');
 	});
 
-
-	fastify.get<{ Querystring: { name: string, p?: string } }>('/json', async (request, reply) => {
-
+	fastify.get<{ Querystring: { name: string; p?: string } }>('/json', async (request, reply) => {
 		if (process.env.PREVIEW_PASSWORD && request.query.p !== process.env.PREVIEW_PASSWORD) {
 			return reply.status(403).send({ error: 'Invalid password' });
 		}
@@ -61,9 +61,9 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		const person = await prisma.person.findFirst({
 			where: {
 				lastName: {
-					contains: request.query.name
-				}
-			}
+					contains: request.query.name,
+				},
+			},
 		});
 
 		if (!person) {
@@ -73,8 +73,11 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 
 		const dienstplan = await prisma.dienstplan.findMany({
 			where: {
-				personId: person.id
-			}
+				personId: person.id,
+			},
+			orderBy: {
+				startsAt: 'asc',
+			},
 		});
 
 		const dienste = await getDiensteMap(true);
@@ -82,33 +85,48 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		return {
 			hmac: hmac(person.id),
 			person: person,
-			dienstplan: dienstplan.map(dienst => ({
+			dienstplan: dienstplan.map((dienst) => ({
 				...dienst,
-				dienst: dienste[dienst.dienstId]
-			}))
+				dienst: dienste[dienst.dienstId],
+			})),
 		};
-
 	});
-
 };
 
-
-const getIcs = async (person: Person) => {
-
+const getIcs = async (person: Person, onlyFunktion = false) => {
 	if (!fs.existsSync(dirname('data/cache'))) {
 		fs.mkdirSync(dirname('data/cache'));
 	}
 
-	if(fs.existsSync(path.join(dirname('data/cache'), `${person.id}.ics`))) {
-		return fs.readFileSync(path.join(dirname('data/cache'), `${person.id}.ics`));
+	const cacheFile = `${person.id}_${onlyFunktion ? 'f' : 'a'}.ics`;
+
+	if (fs.existsSync(path.join(dirname('data/cache'), cacheFile))) {
+		return fs.readFileSync(path.join(dirname('data/cache'), cacheFile));
 	}
 
+	let dienstplan: Dienstplan[] = [];
 
-	const dienstplan = await prisma.dienstplan.findMany({
-		where: {
-			personId: person.id
-		}
-	});
+	if (!onlyFunktion)
+		dienstplan = await prisma.dienstplan.findMany({
+			where: {
+				personId: person.id,
+			},
+			orderBy: {
+				startsAt: 'asc',
+			},
+		});
+	else
+		dienstplan = await prisma.dienstplan.findMany({
+			where: {
+				personId: person.id,
+				dienst: {
+					fullDay: true,
+				},
+			},
+			orderBy: {
+				startsAt: 'asc',
+			},
+		});
 
 	const dienste = await getDiensteMap(true);
 
@@ -135,17 +153,25 @@ RRULE:FREQ=YEARLY;BYDAY=-1SU;BYMONTH=10
 END:STANDARD
 END:VTIMEZONE`;
 
-
 	for (const dienst of dienstplan) {
 		ics += `
 BEGIN:VEVENT
 UID:${md5(person.id + dienst.startsAt.toString())}
-DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss[Z]')}
+`;
+
+		if (dienste[dienst.dienstId].fullDay) {
+			ics += `DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss[Z]')}
+DTSTART:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDD')}
+DTEND:${dayjs(dienst.endsAt).format('YYYYMMDD')}
+`;
+		} else {
+			ics += `DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss[Z]')}
 DTSTART:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDDTHHmmss[Z]')}
 DTEND:${dayjs(dienst.endsAt).format('YYYYMMDDTHHmmss[Z]')}
-SUMMARY:${dienste[dienst.dienstId].name}${dienst.position ? ` (${dienst.position})` : ''}
-END:VEVENT`
-
+`;
+		}
+		ics += `SUMMARY:${dienste[dienst.dienstId].name}${dienst.position ? ` (${dienst.position})` : ''}
+END:VEVENT`;
 	}
 
 	ics += `
@@ -153,7 +179,7 @@ END:VCALENDAR`;
 
 	ics = ics.replace(/\n/g, '\r\n');
 
-	fs.writeFileSync(path.join(dirname('data/cache'), `${person.id}.ics`), ics);
+	fs.writeFileSync(path.join(dirname('data/cache'), cacheFile), ics);
 
 	return ics;
 };

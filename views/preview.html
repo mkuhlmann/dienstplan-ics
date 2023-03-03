@@ -28,28 +28,28 @@
 
 	<body class="dark:bg-gray-900 dark:text-gray-300">
 		<div id="app" class="m-5">
-			<h1 class="font-bold text-3xl mb-5">Dienstplan</h1>
+			<h1 class="mb-5 text-3xl font-bold">Dienstplan</h1>
 
 			<div class="italic" v-bind:style="{ display: 'none' }">Lade ...</div>
 
 			<div class="hidden" v-bind:style="{ display: 'block' }">
 				<form v-on:submit.prevent="query()">
-					<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">Mindestens drei Zeichen des Nachnamens eingeben:</label>
+					<label for="ics" class="mb-2 block text-sm font-bold text-gray-900 dark:text-gray-300">Mindestens drei Zeichen des Nachnamens eingeben:</label>
 					<div class="flex gap-5">
 						<input
 							type="text"
-							class="flex-1 g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+							class="g-gray-50 block flex-1 rounded-lg border border-gray-300 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 							v-model="name"
 							placeholder="Nachname ..."
 						/>
-						<button class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">Dienstplan abrufen</button>
+						<button class="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-700">Dienstplan abrufen</button>
 					</div>
 				</form>
 
-				<div v-if="status == 2" class="bg-red-400 border-l-5 border-l-red-600 text-white p-5 my-5">Kein Dienstplan für {{ name }} gefunden.</div>
+				<div v-if="status == 2" class="border-l-5 my-5 border-l-red-600 bg-red-400 p-5 text-white">Kein Dienstplan für {{ name }} gefunden.</div>
 
 				<div role="status" v-if="status == -1" class="my-5">
-					<svg aria-hidden="true" class="mr-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<svg aria-hidden="true" class="mr-2 h-8 w-8 animate-spin fill-blue-600 text-gray-200 dark:text-gray-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
 						<path
 							d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
 							fill="currentColor"
@@ -63,31 +63,55 @@
 				</div>
 
 				<div v-if="status == 1">
-					<h2 class="text-2xl my-5">Dienstplan für {{ person.lastName }}, {{ person.firstName }}</h2>
+					<h2 class="my-5 text-2xl">Dienstplan für {{ person.lastName }}, {{ person.firstName }}</h2>
+
+					<!-- yellow warning alert -->
+					<div class="my-5 rounded-lg border-2 border-l-8 border-yellow-500 p-3 text-white">
+						<p>CAVE &mdash; Die Daten basieren auf dem letzten als .pdf verschickten Dienstplan. Kurzfristige Änderungen werden nicht übernommen!</p>
+					</div>
 
 					<div class="mb-5">
-						<label for="ics" class="block mb-2 text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
+						<label for="ics" class="mb-2 block text-sm font-bold text-gray-900 dark:text-gray-300">URL für Kalender (Google Calendar, Outlook, Thunderbird):</label>
+
+						<!-- tailwind radio group for options "Nur Funktionsdienstplan", "Gesamten Dienstplan" -->
+
+						<div class="my-5 flex gap-5">
+							<label class="inline-flex items-center">
+								<input type="radio" class="form-radio" name="subscribeScope" value="funktion" v-model="subscribeScope" />
+								<span class="ml-2">Nur Funktionsdienstplan</span>
+							</label>
+							<label class="inline-flex items-center">
+								<input type="radio" class="form-radio" name="subscribeScope" value="gesamt" v-model="subscribeScope" />
+								<span class="ml-2">Gesamten Dienstplan</span>
+							</label>
+						</div>
+
 						<input
 							name="ics"
 							type="text"
-							class="w-full g-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-							:value="`${baseUrl}/ics?name=${encodeURIComponent(person.lastName)}&id=${person.id}&hmac=${hmac}`"
+							class="g-gray-50 block w-full rounded-lg border border-gray-300 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+							:value="`${baseUrl}/ics?id=${person.id}&hmac=${hmac}&scope=${subscribeScope}`"
 							v-on:click="copyInput"
 						/>
 						<div v-if="showCopied" class="font-bold text-green-500">ℹ️ URL in die Zwischenablage kopiert.</div>
 					</div>
 
 					<div class="mb-5">
-						<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(1)">Anleitung für Google Calendar {{ showAnleitung == 1 ? '👇' : '👈' }}</div>
+						<div class="text-blue-500 hover:cursor-pointer hover:text-blue-800" v-on:click="toggleAnleitung(1)">Anleitung für Google Calendar {{ showAnleitung == 1 ? '👇' : '👈' }}</div>
 						<div v-if="showAnleitung == 1">
 							<img src="https://s.mkuhlmann.org/y4nU5aS/firefox_9pRM9LSXto.png" class="inline-block" />
 							<img src="https://s.mkuhlmann.org/NJSa0rE/firefox_eTEe4Jdd45.png" class="inline-block" />
 						</div>
-						<div class="hover:cursor-pointer text-blue-500 hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
+						<div class="text-blue-500 hover:cursor-pointer hover:text-blue-800" v-on:click="toggleAnleitung(2)">Anleitung für Thunderbird {{ showAnleitung == 2 ? '👇' : '👈' }}</div>
 						<div v-if="showAnleitung == 2">
 							<img src="https://s.mkuhlmann.org/UkPqKFi/thunderbird_quh2XkADNk.png" class="inline-block" />
 							<img src="https://s.mkuhlmann.org/rd37Ceh/thunderbird_imt0T2OH1k.png" class="inline-block" />
 							<img src="https://s.mkuhlmann.org/gWOiENE/thunderbird_QB3Az8akab.png" class="inline-block" />
+						</div>
+						<div class="text-blue-500 hover:cursor-pointer hover:text-blue-800" v-on:click="toggleAnleitung(3)">Anleitung für Outlook Web {{ showAnleitung == 3 ? '👇' : '👈' }}</div>
+						<div v-if="showAnleitung == 3">
+							<img src="https://s.mkuhlmann.org/ZSdJU79/firefox_Zg5OGOGxCn.png" class="inline-block" />
+							<img src="https://s.mkuhlmann.org/rWetY73/firefox_YsVSgUt217.png" class="inline-block" />
 						</div>
 					</div>
 
@@ -95,13 +119,18 @@
 
 					<div>
 						<div v-for="(kw, kwNum) in dienstplan">
-							<h4 class="italic mb-2">KW {{ kwNum }} ({{ formatMin(kw.sum) }})</h4>
-							<div class="border dark:border-gray-400 px-4 py-2 inline-block mb-3 mr-3" style="min-width: 250px" v-for="d in kw.dienste">
+							<h4 class="mb-2 italic">KW {{ kwNum }} ({{ formatMin(kw.sum) }})</h4>
+							<div
+								class="mb-3 mr-3 inline-block border px-4 py-2 dark:border-gray-400"
+								v-bind:class="{ 'bg-red-200 dark:bg-red-900': d.dienst.fullDay }"
+								style="min-width: 250px"
+								v-for="d in kw.dienste"
+							>
 								<div>
 									<span class="">{{ dayjs(d.startsAt).format('dd, YYYY-MM-DD') }}</span>
-									<span class="font-bold float-right ml-10">{{ d.dienst.shortName }}</span>
+									<span class="float-right ml-10 font-bold">{{ d.dienst.shortName }}</span>
 								</div>
-								<div>
+								<div v-bind:style="{ 'visibility': d.dienst.fullDay ? 'hidden' : '' }">
 									<span class="italic">{{ dayjs(d.startsAt).format('HH:mm') }} - {{ dayjs(d.endsAt).format('HH:mm') }}</span>
 									<span class="float-right ml-10" v-if="d.position">({{ d.position }})</span>
 								</div>
@@ -130,6 +159,8 @@
 
 			const app = createApp({
 				setup() {
+					const subscribeScope = ref('gesamt');
+
 					const name = ref('');
 					const status = ref(0);
 
@@ -206,7 +237,7 @@
 						return `${h}h ${m}min`;
 					};
 
-					return { baseUrl, name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, formatMin, copyInput, query, encodeURIComponent };
+					return { baseUrl, name, dienstplan, person, hmac, status, showAnleitung, toggleAnleitung, showCopied, formatMin, copyInput, query, encodeURIComponent, subscribeScope };
 				},
 			});
 

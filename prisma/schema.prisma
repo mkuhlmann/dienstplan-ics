@@ -36,6 +36,7 @@ model Dienst {
 
     startsAt DateTime
     endsAt   DateTime
+    fullDay  Boolean? @default(false)
 
     active     Boolean
     Dienstplan Dienstplan[]

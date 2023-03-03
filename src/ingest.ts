@@ -1,64 +1,11 @@
 import * as XLSX from 'xlsx';
-import util, { InspectOptions } from 'node:util';
+import { CellPointer } from './CellPointer';
 import { prisma } from './db';
 import { getDiensteMap } from './dienste';
 import dayjs from 'dayjs';
 import fs from 'fs';
 import { dirname, getWeekNumber } from './util';
-
-class CellPointer {
-	x: number;
-	y: number;
-	sheet: XLSX.WorkSheet;
-
-	constructor(sheet: XLSX.WorkSheet, x: number = 0, y: number = 0) {
-		this.x = x;
-		this.y = y;
-		this.sheet = sheet;
-	}
-
-
-	getCell() {
-		const cell = this.sheet[XLSX.utils.encode_cell({ c: this.x, r: this.y })];
-		return cell;
-	}
-
-	getString(): string {
-		const cell = this.getCell();
-		if (!cell) return '';
-		return cell.w ? this.decodeString(cell.w) : '';
-	}
-
-	getNumber(): number {
-		return this.getCell().v;
-	}
-
-	isInteger() {
-		const cell = this.getCell();
-		return cell && cell.v ? Number.isInteger(this.getCell().v) : false;
-	}
-
-	toString() {
-		return XLSX.utils.encode_cell({ c: this.x, r: this.y });
-	}
-
-	clone() {
-		return new CellPointer(this.sheet, this.x, this.y);
-	}
-
-	decodeString(s: string) {
-		return s.replace('¸', 'ü').replace('ˆ', 'ö');
-	}
-
-	[util.inspect.custom]() {
-		return `CellPointer(${this.toString()}) { ${this.getString()} }`;
-	}
-
-	static fromString(sheet: XLSX.WorkSheet, str: string) {
-		const dec = XLSX.utils.decode_cell(str);
-		return new CellPointer(sheet, dec.c, dec.r);
-	}
-}
+import { Dienst, Person as DbPerson } from '@prisma/client';
 
 class Day {
 	day: number;
@@ -82,14 +29,173 @@ class Person {
 		this.lastName = lastName;
 		this.cell = cell;
 	}
-
 }
+
+const createDatabaseBackup = () => {
+	if (!fs.existsSync(dirname('data', 'backups'))) {
+		fs.mkdirSync(dirname('data', 'backups'));
+	}
+
+	fs.copyFileSync(dirname('data', 'database.db'), dirname('data', 'backups', `${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.db`));
+};
+
+// function to calculate levenstein distance
+const levenshtein = (a: string, b: string): number => {
+	// Create empty edit distance matrix for all possible modifications of
+	// substrings of a to substrings of b.
+	const distanceMatrix = Array(b.length + 1)
+		.fill(null)
+		.map(() => Array(a.length + 1).fill(null));
+
+	// Fill the first row of the matrix.
+	// If this is first row then we're transforming empty string to a.
+	// In this case the number of transformations equals to size of a substring.
+	for (let i = 0; i <= a.length; i += 1) {
+		distanceMatrix[0][i] = i;
+	}
+
+	// Fill the first column of the matrix.
+	// If this is first column then we're transforming empty string to b.
+	// In this case the number of transformations equals to size of b substring.
+	for (let j = 0; j <= b.length; j += 1) {
+		distanceMatrix[j][0] = j;
+	}
+
+	for (let j = 1; j <= b.length; j += 1) {
+		for (let i = 1; i <= a.length; i += 1) {
+			const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+			distanceMatrix[j][i] = Math.min(
+				distanceMatrix[j][i - 1] + 1, // deletion
+				distanceMatrix[j - 1][i] + 1, // insertion
+				distanceMatrix[j - 1][i - 1] + indicator // substitution
+			);
+		}
+	}
+
+	return distanceMatrix[b.length][a.length];
+};
+
+let _persons: DbPerson[] | null = null;
+const getPersonByApproximateName = async (lastName: string) => {
+	if (!_persons) {
+		_persons = await prisma.person.findMany();
+	}
+
+	const distances = _persons.map((person) => {
+		return {
+			person,
+			distance: levenshtein(person.lastName.toLowerCase(), lastName.toLowerCase()),
+		};
+	});
+
+	const sortedDistances = distances.sort((a, b) => a.distance - b.distance);
+
+	if (sortedDistances[0].distance > 2) {
+		return null;
+	}
+
+	return sortedDistances[0].person;
+};
 
 let _log = '';
 let _error = false;
 const log = (message: string) => {
 	console.log(message);
 	_log += message + '\n';
+};
+
+export const ingestFunktion = async (fileName: string) => {
+	_log = '';
+	_error = false;
+
+	log(`📥 Ingesting ${fileName}`);
+
+	// create database backup
+	log('📦 Creating database backup');
+
+	createDatabaseBackup();
+
+	let date: dayjs.Dayjs;
+
+	let match = fileName.match(/\/F(\d{4})-(\d{2})\.xlsx$/);
+
+	if (match) {
+		date = dayjs(new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1, 12, 0, 0)).tz('Europe/Berlin');
+	} else {
+		throw new Error('Could not parse date from filename');
+	}
+
+	log(`📅 Assumed Date: ${date.format('MMMM YYYY')}`);
+
+	const workbook = XLSX.readFile(fileName);
+
+	const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+	let cellPointer = new CellPointer(sheet);
+
+	// increse cell pointer until contents matches dd.mm.yyyy
+	while (!cellPointer.getString().match(/\d{1,2}\/\d{1,2}\/\d{2}/) && cellPointer.y < 100) {
+		cellPointer.y++;
+	}
+
+	if (cellPointer.y >= 100) {
+		log(`Could not find date in sheet`);
+		_error = true;
+		return;
+	}
+
+	// get date
+	const diensteMap = await getDiensteMap();
+
+	while (cellPointer.getString() != '') {
+		const dateString = cellPointer.getString();
+		const dateParsed = dayjs(dateString, 'MM/DD/YYYY').tz('Europe/Berlin');
+		log(`📅 ${dateParsed.format('DD MMMM YYYY')}`);
+
+		if (!dateParsed.isValid()) {
+			log(`Could not parse date from cell ${cellPointer.x}${cellPointer.y}`);
+			_error = true;
+			return;
+		}
+
+		cellPointer.x++;
+		await ingestFunktionRow(diensteMap['LZEKG'], cellPointer, dateParsed);
+		cellPointer.x++;
+		await ingestFunktionRow(diensteMap['EKG'], cellPointer, dateParsed);
+
+		cellPointer.x--;
+		cellPointer.x--;
+		cellPointer.y++;
+	}
+
+	return _log;
+};
+
+const ingestFunktionRow = async (dienst: Dienst, cellPointer: CellPointer, date: dayjs.Dayjs) => {
+	if (cellPointer.getString().trim() != '') {
+		const person = await getPersonByApproximateName(cellPointer.getString());
+
+		if (person) {
+			const startsAt = date.startOf('day').toDate();
+			const endsAt = date.endOf('day').toDate();
+
+			if (!(await prisma.dienstplan.findFirst({ where: { startsAt, endsAt, dienstId: dienst.id, personId: person.id } }))) {
+				log(`\t${dienst.name}: ${person.firstName} ${person.lastName} - add`);
+				await prisma.dienstplan.create({
+					data: {
+						startsAt,
+						endsAt,
+						dienstId: dienst.id,
+						personId: person.id,
+					},
+				});
+			} else {
+				log(`\t${dienst.name}: ${person.firstName} ${person.lastName} - skip`);
+			}
+		} else {
+			log(`\t⚠️${dienst.name}: ${cellPointer.getString()} - not found`);
+		}
+	}
 };
 
 export const ingest = async (fileName: string) => {
@@ -101,11 +207,7 @@ export const ingest = async (fileName: string) => {
 	// create database backup
 	log('📦 Creating database backup');
 
-	if (!fs.existsSync(dirname('data', 'backups'))) {
-		fs.mkdirSync(dirname('data', 'backups'));
-	}
-
-	fs.copyFileSync(dirname('data', 'database.db'), dirname('data', 'backups', `${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.db`));
+	createDatabaseBackup();
 
 	let date: dayjs.Dayjs;
 
@@ -114,18 +216,10 @@ export const ingest = async (fileName: string) => {
 	if (match) {
 		date = dayjs(new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1, 12, 0, 0)).tz('Europe/Berlin');
 	} else {
-		match = fileName.match(/^\/(\d{2})\.xlsx$/);
-		if (match) {
-			date = dayjs(new Date(dayjs().year(), parseInt(match[1]) - 1, 1, 12, 0, 0)).startOf('month').tz('Europe/Berlin');
-		} else {
-			throw new Error('Could not parse date from filename');
-		}
+		throw new Error('Could not parse date from filename');
 	}
 
-
-
 	log(`📅 Assumed Date: ${date.format('MMMM YYYY')}`);
-
 
 	const workbook = XLSX.readFile(fileName);
 
@@ -145,7 +239,6 @@ export const ingest = async (fileName: string) => {
 
 	const overview = findAndParseOverviewTable(cellPotiner);
 
-
 	if (!_error) {
 		await insertDatabase(date, persons, overview);
 		deleteCache();
@@ -155,30 +248,23 @@ export const ingest = async (fileName: string) => {
 
 const deleteCache = () => {
 	fs.rmSync(dirname('data', 'cache'), { recursive: true, force: true });
-}
+};
 
 const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>, overview: Record<number, Record<string, string>>) => {
-
 	const diensteMap = await getDiensteMap();
-
 
 	log(`📤 Inserting persons into database`);
 	for (const k in persons) {
 		const person = persons[k];
-		let dbPerson = await prisma.person.findFirst({
-			where: {
-				lastName: person.lastName
-			}
-		});
+		let dbPerson = await getPersonByApproximateName(person.lastName);
 
 		if (!dbPerson) {
 			dbPerson = await prisma.person.create({
 				data: {
 					firstName: person.firstName,
 					lastName: person.lastName,
-				}
+				},
 			});
-
 
 			log(`🧑‍⚕️ Created ${dbPerson.firstName} ${dbPerson.lastName} in database`);
 		}
@@ -188,9 +274,9 @@ const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>
 				personId: dbPerson.id,
 				startsAt: {
 					gte: date.startOf('month').toDate(),
-					lte: date.endOf('month').toDate()
-				}
-			}
+					lte: date.endOf('month').toDate(),
+				},
+			},
 		});
 
 		if (personDiensteCount > 0) {
@@ -200,9 +286,12 @@ const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>
 					personId: dbPerson.id,
 					startsAt: {
 						gte: date.startOf('month').toDate(),
-						lte: date.endOf('month').toDate()
-					}
-				}
+						lte: date.endOf('month').toDate(),
+					},
+					dienst: {
+						fullDay: false,
+					},
+				},
 			});
 		}
 
@@ -228,7 +317,6 @@ const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>
 				log(`🚨 Dienst ${day.schedule} not found`);
 				continue;
 			}
-
 
 			let startsAt = date.set('date', day.day).startOf('day').add(dienst.startsDayjs.get('hour'), 'hour').add(dienst.startsDayjs.get('minute'), 'minute');
 			let endsAt = date.set('date', day.day).startOf('day').add(dienst.endsDayjs.get('hour'), 'hour').add(dienst.endsDayjs.get('minute'), 'minute');
@@ -261,14 +349,13 @@ const insertDatabase = async (date: dayjs.Dayjs, persons: Record<string, Person>
 					dienstId: dienst.id,
 					startsAt: startsAt.toDate(),
 					endsAt: endsAt.toDate(),
-					position: (week != null && overview[week] && overview[week][dbPerson.lastName]) ? overview[week][dbPerson.lastName] : null
-				}
+					position: week != null && overview[week] && overview[week][dbPerson.lastName] ? overview[week][dbPerson.lastName] : null,
+				},
 			});
 		}
 
 		log(`📅 Inserted ${i} dienste for ${dbPerson.firstName} ${dbPerson.lastName}`);
 	}
-
 };
 
 const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Person>) => {
@@ -329,10 +416,8 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 	let j = 0;
 	let i = 0;
 	while (cellPointer.isInteger() && cellPointer.x < 100) {
-
 		i++;
 		for (const k in persons) {
-
 			const personCell = CellPointer.fromString(cellPointer.sheet, persons[k].cell);
 			personCell.x = cellPointer.x;
 			j++;
@@ -344,13 +429,11 @@ const findAndParseTable = (cellPointer: CellPointer, persons: Record<string, Per
 		while (!cellPointer.isInteger() && cellPointer.x < 100) {
 			cellPointer.x++;
 		}
-
 	}
 
 	log(`📅 Processed ${i} days / ${j} schedules`);
 
 	return persons;
-
 };
 
 const findAndParseOverviewTable = (cellPointer: CellPointer) => {
@@ -360,10 +443,8 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 
 	let initialY = cellPointer.y;
 
-
 	// search for Name, Vorname
 	while (cellPointer.getString() != 'KW' && cellPointer.y - initialY < 100) {
-
 		// sometimes table is intended by one cell
 		cellPointer.x++;
 		if (cellPointer.getString() == 'KW') {
@@ -372,14 +453,12 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 		cellPointer.x--;
 
 		cellPointer.y++;
-
 	}
 
 	if (cellPointer.y - initialY >= 100) {
 		log(`⚠️ Could not find overview table, last cell was ${cellPointer}`);
 		return overview;
 	}
-
 
 	log(`✅ Found overview table starting at ${cellPointer}`);
 
@@ -424,7 +503,6 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 			personCell.y++;
 		}
 
-
 		cellPointer.x++;
 		while (!cellPointer.isInteger() && cellPointer.x < 100) {
 			cellPointer.x++;
@@ -433,9 +511,5 @@ const findAndParseOverviewTable = (cellPointer: CellPointer) => {
 
 	log(`📅 Processed ${Object.keys(overview).length} weeks`);
 
-
 	return overview;
-
-
-
 };
