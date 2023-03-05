@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
+import { log } from './log';
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ const app = fastify({
 });
 
 app.addHook('onRequest', async (request, reply) => {
-	console.log(`${dayjs().format('HH:mm:ss')} :: ${request.ip} - ${request.method.padEnd(5)} ${request.url}`);
+	log.info(`${request.ip} - ${request.method.padEnd(5)} ${request.url}`);
 });
 
 app.register(fastifyMultipart);
@@ -43,6 +44,6 @@ app.listen({ host: '0.0.0.0', port: 9000 }, (err, address) => {
 		console.error(err)
 		process.exit(1)
 	}
-	console.log(`🚀 Server ready at: ${address}`);
+	log.info(`🚀 Server ready at: ${address}`);
 });
 

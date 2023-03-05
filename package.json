@@ -13,6 +13,7 @@
 		"dayjs": "^1.11.5",
 		"dotenv": "^16.0.2",
 		"fastify": "^4.5.3",
+		"pino-pretty": "^9.4.0",
 		"xlsx": "^0.18.5"
 	},
 	"devDependencies": {

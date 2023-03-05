@@ -1,9 +1,11 @@
 import { prisma } from '../db';
 import { FastifyPluginAsync } from 'fastify';
 import { Dienst, Prisma } from '.prisma/client';
+import fs from 'fs';
+import { dirname } from '../util';
 
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
-	fastify.get('/seed', async (request, reply) => {
+	fastify.get('/admin/seed', async (request, reply) => {
 		const dienste: Prisma.XOR<Prisma.DienstCreateInput, Prisma.DienstUncheckedCreateInput>[] = [
 			{
 				id: 'cl7tmarm3000253p0xlzmgvrg',
@@ -108,6 +110,15 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		}
 
 		return `Seeded ${i} Dienste`;
+	});
+
+	fastify.get<{ Querystring: { p: string } }>('/admin/download-db', async (request, reply) => {
+		if (request.query.p !== process.env.INGEST_PASSWORD) return reply.code(403).send('Wrong password!');
+
+		const stream = fs.createReadStream(dirname('data', 'database.db'));
+		reply.header('Content-Type', 'application/octet-stream');
+		reply.header('Content-Disposition', 'attachment; filename=database.db');
+		return reply.send(stream);
 	});
 };
 

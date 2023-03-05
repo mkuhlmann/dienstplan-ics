@@ -7,6 +7,7 @@ import { Dienstplan, Person } from '.prisma/client';
 import path from 'path';
 import fs from 'fs';
 import { dirname, hmac } from '../util';
+import { log } from '../log';
 
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
 	fastify.get<{ Querystring: { name?: string; id?: string; hmac: string; scope?: string } }>('/ics', async (request, reply) => {
@@ -120,8 +121,11 @@ const getIcs = async (person: Person, onlyFunktion = false) => {
 	const cacheFile = `${person.id}_${onlyFunktion ? 'f' : 'a'}.ics`;
 
 	if (fs.existsSync(path.join(dirname('data/cache'), cacheFile))) {
+		log.info('Using cached ics file for ' + person.lastName);
 		return fs.readFileSync(path.join(dirname('data/cache'), cacheFile));
 	}
+
+	log.info('Generating ics file for ' + person.lastName);
 
 	let dienstplan: Dienstplan[] = [];
 
