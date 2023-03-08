@@ -10,7 +10,7 @@ import { dirname, hmac } from '../util';
 import { log } from '../log';
 
 const plugin: FastifyPluginAsync = async (fastify, opts) => {
-	fastify.get<{ Querystring: { name?: string; id?: string; hmac: string; scope?: string } }>('/ics', async (request, reply) => {
+	fastify.get<{ Querystring: { name?: string; id?: string; hmac: string; scope?: string; fReminder?: string } }>('/ics', async (request, reply) => {
 		let person: Person | null = null;
 
 		if (request.query.id) {
@@ -33,6 +33,15 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 			request.query.scope = 'gesamt';
 		}
 
+		let fReminder = null;
+		if (request.query.fReminder) {
+			// match fReminder to xx:xx
+			let _fReminder = request.query.fReminder.match(/([0-9]{1,2}):([0-9]{1,2})/);
+			if (_fReminder) {
+				fReminder = `${_fReminder[1]}:${_fReminder[2]}`;
+			}
+		}
+
 		if (!person) {
 			reply.status(404);
 			return 'Person not found';
@@ -46,7 +55,7 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 		reply.header('Content-Type', 'text/calendar; charset=utf-8');
 		reply.header('Content-Disposition', `attachment; filename="${person.lastName}_${request.query.scope}.ics"`);
 
-		return await getIcs(person, request.query.scope === 'funktion');
+		return await getIcs(person, request.query.scope === 'funktion', fReminder);
 	});
 
 	fastify.get<{ Querystring: { name: string; p?: string; scope?: string } }>('/json', async (request, reply) => {
@@ -113,12 +122,21 @@ const plugin: FastifyPluginAsync = async (fastify, opts) => {
 	});
 };
 
-const getIcs = async (person: Person, onlyFunktion = false) => {
+const getIcs = async (person: Person, onlyFunktion = false, fReminder: string | null = null) => {
 	if (!fs.existsSync(dirname('data/cache'))) {
 		fs.mkdirSync(dirname('data/cache'));
 	}
 
-	const cacheFile = `${person.id}_${onlyFunktion ? 'f' : 'a'}.ics`;
+	// fReminderHour and fReminderMinute
+	let fReminderHour = 0;
+	let fReminderMinute = 0;
+	if (fReminder) {
+		const _fReminder = fReminder.split(':');
+		fReminderHour = parseInt(_fReminder[0]);
+		fReminderMinute = parseInt(_fReminder[1]);
+	}
+
+	const cacheFile = `${person.id}_${onlyFunktion ? 'f' : 'a'}_${fReminder ?? 'noReminder'}.ics`;
 
 	if (fs.existsSync(path.join(dirname('data/cache'), cacheFile))) {
 		log.info('Using cached ics file for ' + person.lastName);
@@ -185,14 +203,24 @@ UID:${md5(person.id + dienst.startsAt.toString())}
 		if (dienste[dienst.dienstId].fullDay) {
 			ics += `DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss[Z]')}
 DTSTART:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDD')}
-DTEND:${dayjs(dienst.endsAt).format('YYYYMMDD')}
+DTEND:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDD')}
 `;
+
+			if (fReminder) {
+				ics += `BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:${dienste[dienst.dienstId].name}
+TRIGGER;VALUE=DATE-TIME:${dayjs(dienst.startsAt).tz('Europe/Berlin', true).hour(fReminderHour).minute(fReminderMinute).second(0).tz('UTC').format('YYYYMMDDTHHmmss[Z]')}
+END:VALARM
+`;
+			}
 		} else {
 			ics += `DTSTAMP:${dayjs().format('YYYYMMDDTHHmmss[Z]')}
 DTSTART:${dayjs(dienst.startsAt).tz('UTC').format('YYYYMMDDTHHmmss[Z]')}
 DTEND:${dayjs(dienst.endsAt).format('YYYYMMDDTHHmmss[Z]')}
 `;
 		}
+
 		ics += `SUMMARY:${dienste[dienst.dienstId].name}${dienst.position ? ` (${dienst.position})` : ''}
 END:VEVENT`;
 	}

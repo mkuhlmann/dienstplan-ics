@@ -14,7 +14,6 @@ import { log } from './log';
 
 dotenv.config();
 
-
 dayjs.extend(weekOfYear);
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -22,9 +21,8 @@ dayjs.extend(timezone);
 dayjs.tz.setDefault('UTC');
 process.env.TZ = 'UTC';
 
-
 const app = fastify({
-	trustProxy: true
+	trustProxy: true,
 });
 
 app.addHook('onRequest', async (request, reply) => {
@@ -36,14 +34,13 @@ app.register(fastifyFormbody);
 
 app.register(fastifyAutoload, {
 	dir: path.join(__dirname, 'routes'),
-	dirNameRoutePrefix: false
+	dirNameRoutePrefix: false,
 });
 
 app.listen({ host: '0.0.0.0', port: 9000 }, (err, address) => {
 	if (err) {
-		console.error(err)
-		process.exit(1)
+		console.error(err);
+		process.exit(1);
 	}
 	log.info(`🚀 Server ready at: ${address}`);
 });
-
